@@ -1,10 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using SynchronizerData;
 
-public class PlayerScript : MonoBehaviour {
+public class PlayerScript : MonoBehaviour
+{
 
-	
+
 
     //Variables
     public float speed = 6.0F;
@@ -14,14 +16,17 @@ public class PlayerScript : MonoBehaviour {
 
     public Color color;
     public Renderer rend;
+
+    BeatObserver beatObserver;
     // Use this for initialization
     void Start()
     {
+        beatObserver = GetComponent<BeatObserver>();
         rend.material.color = color;
         //Select the instance of AudioProcessor and pass a reference
         //to this object
-        AudioProcessor processor = FindObjectOfType<AudioProcessor>();
-        processor.onBeat.AddListener(onOnbeatDetected);
+        //AudioProcessor processor = FindObjectOfType<AudioProcessor>();
+        //processor.onBeat.AddListener(onOnbeatDetected);
         //processor.onSpectrum.AddListener(onSpectrum);
     }
 
@@ -54,5 +59,29 @@ public class PlayerScript : MonoBehaviour {
         moveDirection.y -= gravity * Time.deltaTime;
         //Making the character move
         controller.Move(moveDirection * Time.deltaTime);
+
+        if ((beatObserver.beatMask & BeatType.OnBeat) == BeatType.OnBeat)
+        {
+            onOnbeatDetected();
+        }
+
+    }
+
+    private void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+        if (hit.transform.CompareTag("Wall"))
+        {
+            Vector3 collisionPoint = hit.normal;
+            float dotRight = Vector3.Dot(-collisionPoint, Vector3.right);
+            float dotLeft = Vector3.Dot(-collisionPoint, Vector3.left);
+            if (dotRight > 0.99f)
+            {
+                Debug.Log("Right");
+            }
+            if (dotLeft > 0.99f)
+            {
+                Debug.Log("Left");
+            }
+        }
     }
 }
