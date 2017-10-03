@@ -22,7 +22,7 @@ public class JukeboxScript : MonoBehaviour {
     //to adjust the sensitivity
     void onOnbeatDetected()
     {
-        Debug.Log("Beat!!!");
+        //Debug.Log("Beat!!!");
     }
 
     //This event will be called every frame while music is playing
