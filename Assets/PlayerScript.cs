@@ -8,11 +8,20 @@ public class PlayerScript : MonoBehaviour
 
 
 
-    //Variables
-    public float speed = 6.0F;
-    public float jumpSpeed = 8.0F;
-    public float gravity = 20.0F;
-    private Vector3 moveDirection = Vector3.zero;
+    // Moving fields
+    [SerializeField] // This will make the variable below appear in the inspector
+    float speed = 6;
+    [SerializeField]
+    float jumpSpeed = 8;
+    [SerializeField]
+    float gravity = 20;
+    Vector3 moveDirection = Vector3.zero;
+    CharacterController controller;
+    //bool isJumping; // "controller.isGrounded" can be used instead
+    [SerializeField]
+    int nrOfAlowedDJumps = 1; // New vairable
+    int dJumpCounter = 0;     // New variable
+
 
     public Color color;
     public Renderer rend;
@@ -21,6 +30,7 @@ public class PlayerScript : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        controller = GetComponent<CharacterController>();
         beatObserver = GetComponent<BeatObserver>();
         rend.material.color = color;
         //Select the instance of AudioProcessor and pass a reference
@@ -41,30 +51,35 @@ public class PlayerScript : MonoBehaviour
 
     void Update()
     {
-        CharacterController controller = GetComponent<CharacterController>();
-        // is the controller on the ground?
-        if (controller.isGrounded)
-        {
-            //Feed moveDirection with input.
-            moveDirection = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-            moveDirection = transform.TransformDirection(moveDirection);
-            //Multiply it by speed.
-            moveDirection *= speed;
-            //Jumping
-            if (Input.GetButton("Jump"))
-                moveDirection.y = jumpSpeed;
-
-        }
-        //Applying gravity to the controller
-        moveDirection.y -= gravity * Time.deltaTime;
-        //Making the character move
-        controller.Move(moveDirection * Time.deltaTime);
+        handleMovement();
 
         if ((beatObserver.beatMask & BeatType.OnBeat) == BeatType.OnBeat)
         {
             onOnbeatDetected();
         }
 
+    }
+
+    public void handleMovement()
+    {
+        moveDirection.x = Input.GetAxis("Horizontal") * speed;
+        moveDirection.z = Input.GetAxis("Vertical") * speed;
+
+        if (Input.GetButtonDown("Jump"))
+        {
+            if (controller.isGrounded)
+            {
+                moveDirection.y = jumpSpeed;
+                dJumpCounter = 0;
+            }
+            if (!controller.isGrounded && dJumpCounter < nrOfAlowedDJumps)
+            {
+                moveDirection.y = jumpSpeed;
+                dJumpCounter++;
+            }
+        }
+        moveDirection.y -= gravity * Time.deltaTime;
+        controller.Move(moveDirection * Time.deltaTime);
     }
 
     private void OnControllerColliderHit(ControllerColliderHit hit)
