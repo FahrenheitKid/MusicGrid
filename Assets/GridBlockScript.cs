@@ -1,0 +1,34 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+
+
+public class GridBlockScript : MonoBehaviour {
+
+    public Color currentColor;
+
+    public Renderer rend;
+    public int level;
+    public bool isMoving;
+
+    public List<Color> colors;
+	// Use this for initialization
+	void Start () {
+        rend.material.color = currentColor;
+        updateColor();
+	}
+	
+	// Update is called once per frame
+	void Update () {
+		
+	}
+
+    public void updateColor()
+    {
+        if(level >= 0 && level < colors.Capacity)
+        currentColor = colors[level];
+
+        rend.material.color = currentColor;
+    }
+}
