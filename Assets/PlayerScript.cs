@@ -63,7 +63,37 @@ public class PlayerScript : MonoBehaviour
 
     public void handleMovement()
     {
-        if(isPlayer1)
+
+        if (transform.position.x <= -0.2)
+        {
+            Vector3 newpos = transform.position;
+            newpos.x = -0.2f;
+            transform.position = newpos;
+        }
+
+        if (transform.position.x >= 6.5)
+        {
+            Vector3 newpos = transform.position;
+            newpos.x = 6.5f;
+            transform.position = newpos;
+        }
+
+        if (transform.position.z <= -0.2f)
+        {
+            Vector3 newpos = transform.position;
+            newpos.z = -0.2f;
+            transform.position = newpos;
+        }
+
+        if (transform.position.z >= 6.5)
+        {
+            Vector3 newpos = transform.position;
+            newpos.z = 6.5f;
+            transform.position = newpos;
+        }
+
+
+        if (isPlayer1)
         {
             moveDirection.x = Input.GetAxis("P1_Horizontal") * speed;
             moveDirection.z = Input.GetAxis("P1_Vertical") * speed;
