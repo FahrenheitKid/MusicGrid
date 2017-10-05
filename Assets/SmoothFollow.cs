@@ -21,15 +21,19 @@ public class SmoothFollow : MonoBehaviour
     public GameObject p1;
     public GameObject p2;
 
+    GameObject g;
+
     public bool PlayerMediumPointAsTarget;
     // Place the script in the Camera-Control group in the component menu
     [AddComponentMenu("Camera-Control/Smooth Follow")]
+    // Place the script in the Camera-Control group in the component menu
+    private void Start()
+    {
+        g = new GameObject();
+    }
 
     void LateUpdate()
     {
-
-        
-        GameObject g = new GameObject();
         g.transform.position = GetPoint(offset);
 
         if (PlayerMediumPointAsTarget)

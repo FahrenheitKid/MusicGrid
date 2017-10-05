@@ -29,6 +29,9 @@ public class GridBlockScript : MonoBehaviour {
         if(level >= 0 && level < colors.Capacity)
         currentColor = colors[level];
 
+        Color emission = currentColor;
         rend.material.color = currentColor;
+        emission *= Mathf.LinearToGammaSpace(0.5f);
+        rend.material.SetColor("_EmissionColor", emission);
     }
 }
