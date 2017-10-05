@@ -7,7 +7,7 @@ using DG.Tweening;
 public class GridBlockScript : MonoBehaviour {
 
     public Color currentColor;
-
+    public int currentColor_index;
     public Renderer rend;
     public int level;
     public bool isMoving;
@@ -15,6 +15,8 @@ public class GridBlockScript : MonoBehaviour {
     public List<Color> colors;
 	// Use this for initialization
 	void Start () {
+        currentColor = colors[0];
+        currentColor_index = 0;
         rend.material.color = currentColor;
         updateColor();
 	}
@@ -26,8 +28,12 @@ public class GridBlockScript : MonoBehaviour {
 
     public void updateColor()
     {
-        if(level >= 0 && level < colors.Capacity)
-        currentColor = colors[level];
+        if (currentColor_index < colors.Count - 2)
+            currentColor_index++;
+        else
+            currentColor_index = 0;
+
+        currentColor = colors[currentColor_index];
 
         Color emission = currentColor;
         rend.material.color = currentColor;

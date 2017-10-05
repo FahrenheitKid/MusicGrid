@@ -27,6 +27,9 @@ public class PlayerScript : MonoBehaviour
     public Color color;
     public Renderer rend;
 
+    public int SlowPower;
+    public int SingleJumpPower;
+    public int musicPower;
     BeatObserver beatObserver;
     // Use this for initialization
     void Start()
@@ -142,6 +145,11 @@ public class PlayerScript : MonoBehaviour
         controller.Move(moveDirection * Time.deltaTime);
     }
 
+    public void applyPower()
+    {
+
+    }
+
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
         if (hit.transform.CompareTag("Wall"))
@@ -157,6 +165,23 @@ public class PlayerScript : MonoBehaviour
             {
                 Debug.Log("Left");
             }
+        }
+
+
+        if (hit.transform.CompareTag("PowerUp"))
+        {
+            PowerUpScript p = hit.transform.gameObject.GetComponent<PowerUpScript>();
+
+            if (p.isMusicPower)
+                musicPower++;
+            else if (p.isSlowPower)
+                SlowPower++;
+            else if (p.isMusicPower)
+                musicPower++;
+
+            applyPower();
+            Destroy(hit.gameObject);
+
         }
     }
 }

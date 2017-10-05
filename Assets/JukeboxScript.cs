@@ -9,6 +9,7 @@ public class JukeboxScript : MonoBehaviour {
     public float offsety;
     public float offsetz;
     public GameObject grid;
+    public int blocks_to_move;
     void Start()
     {
         //Select the instance of AudioProcessor and pass a reference
@@ -24,7 +25,7 @@ public class JukeboxScript : MonoBehaviour {
     void onOnbeatDetected()
     {
         GridMakerScript gm = grid.GetComponent<GridMakerScript>();
-        gm.moveGridBlocks(4, true);
+        gm.moveGridBlocks(blocks_to_move, true);
         Debug.Log("Beat!!!");
     }
 

@@ -20,6 +20,11 @@ public class GridMakerScript : MonoBehaviour {
     public float block_movement_duration;
     BeatObserver beatObserver;
 
+
+    public int lowest_level;
+    public int highest_level;
+    public int level_gap_limit;
+    public int level_gap;
     public List<GameObject> grid_List;
     void Start()
     {
@@ -47,25 +52,55 @@ public class GridMakerScript : MonoBehaviour {
         int direction = 1;
 
         if (!up) direction = -1;
-        if(n_blocks > grid_List.Capacity)
+        if(n_blocks > grid_List.Count)
         {
             print("trying to move more blocks than exists!");
             return;
 
         }
+        updateLevelGap();
 
         List<int> selecteds = new List<int>();
 
         List<int> checklist = new List<int>();
-        for (int i = 0; i < n_blocks; i++)
-        {
-            selecteds.Add(repeatlessRand(0, grid_List.Capacity - 1,checklist));
-            checklist.Add(selecteds[i]);
-           
-        }
 
-        for(int i = 0; i < selecteds.Capacity; i++)
+        bool needToSelect = false;
+        if (level_gap >= level_gap_limit)
+            needToSelect = true;
+
+        if(needToSelect)
         {
+            for (int i = 0; i < grid_List.Count; i++)
+            {
+                if (grid_List[i].GetComponent<GridBlockScript>().level <= lowest_level)
+                {
+                    selecteds.Add(i);
+                    // checklist.Add(i);
+                }
+                    
+            }
+        }
+        
+        if(selecteds.Count < n_blocks)
+        {
+            int difference = n_blocks - selecteds.Count;
+            //escolhe cubos random para serem movidos
+            for (int i = 0; i < difference; i++)
+            {
+
+                selecteds.Add(repeatlessRand(0, grid_List.Count - 1, checklist));
+                checklist.Add(selecteds[i]);
+
+            }
+        }
+        
+        
+
+        //move os cubos selecteds
+        for(int i = 0; i < selecteds.Count; i++)
+        {
+
+            if (i > n_blocks) break;
             //melhor fazer Tween ou lerp com isso
             Vector3 newpos = grid_List[selecteds[i]].transform.position;
             newpos.y += 1 * direction;
@@ -75,8 +110,6 @@ public class GridMakerScript : MonoBehaviour {
 
             GridBlockScript blockscript = grid_List[selecteds[i]].GetComponent<GridBlockScript>();
             if (!up && blockscript.level == 0)
-                blockscript.level = 10;
-            else if (up && blockscript.level == 10)
                 blockscript.level = 0;
             else
                 blockscript.level += direction;
@@ -84,7 +117,33 @@ public class GridMakerScript : MonoBehaviour {
             blockscript.updateColor();
 
         }
-       
+
+        updateLevelGap();
+
+    }
+
+
+    public void updateLevelGap()
+    {
+
+        for(int i = 0; i < grid_List.Count;i++)
+        {
+            GridBlockScript g = grid_List[i].GetComponent<GridBlockScript>();
+
+            if(i == 0)
+            {
+                lowest_level = g.level;
+                highest_level = g.level;
+            }
+            if (g.level <= lowest_level)
+                lowest_level = g.level;
+
+            if (g.level >= highest_level)
+                highest_level = g.level;
+
+        }
+
+        level_gap = highest_level - lowest_level;
     }
     IEnumerator CreateWorld()
     {
