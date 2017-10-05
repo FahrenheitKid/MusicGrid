@@ -16,6 +16,10 @@ public class JukeboxScript : MonoBehaviour {
     public float musicPower_time;
     public float musicPower_timer;
 
+    public float initial_gThresh;
+    public float pitch_modifier;
+    public float gThresh_modifier;
+
     void Start()
     {
         //Select the instance of AudioProcessor and pass a reference
@@ -37,7 +41,7 @@ public class JukeboxScript : MonoBehaviour {
             {
                 isMusicPower = false;
                 DOTween.To(() => GetComponent<AudioSource>().pitch, x => GetComponent<AudioSource>().pitch = x, 1.0f, 1);
-                DOTween.To(() => GetComponent<AudioProcessor>().gThresh, x => GetComponent<AudioProcessor>().gThresh = x, 1.2f, 2);
+                DOTween.To(() => GetComponent<AudioProcessor>().gThresh, x => GetComponent<AudioProcessor>().gThresh = x, initial_gThresh, 2);
 
             }
 

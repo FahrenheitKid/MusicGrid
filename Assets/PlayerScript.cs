@@ -28,6 +28,8 @@ public class PlayerScript : MonoBehaviour
     public Color color;
     public Renderer rend;
 
+
+    public int powerUpNeeded;
     public int SlowPower;
     public int SingleJumpPower;
     public int musicPower;
@@ -191,36 +193,50 @@ public class PlayerScript : MonoBehaviour
     {
 
        
-        if (musicPower >= 3)
+        if (musicPower >= powerUpNeeded)
         {
-            musicPower = 0;
-            SlowPower = 0;
-            SingleJumpPower = 0;
 
-
-            print("aplayou");
-
-            //DOTween.To(,0.7,)
-
-            int luck = Random.Range(0, 2);
-            if (luck % 2 == 0)
+            if (!Juke_Ref.isMusicPower)
             {
-                DOTween.To(() => GetComponent<AudioSource>().pitch, x => GetComponent<AudioSource>().pitch = x, 1.0f, 2);
-                DOTween.To(() => GetComponent<AudioProcessor>().gThresh, x => GetComponent<AudioProcessor>().gThresh = x, 2.0f, 2);
 
+
+                musicPower = 0;
+                SlowPower = 0;
+                SingleJumpPower = 0;
+
+
+                print("aplayou");
+
+                //DOTween.To(,0.7,)
+
+                int luck = Random.Range(0, 2);
+                if (luck % 2 == 0)
+                {
+                    float val1 = Juke_Ref.GetComponent<AudioSource>().pitch - Juke_Ref.pitch_modifier;
+                    float val2 = Juke_Ref.GetComponent<AudioProcessor>().gThresh + Juke_Ref.gThresh_modifier;
+                    DOTween.To(() => Juke_Ref.GetComponent<AudioSource>().pitch, x => Juke_Ref.GetComponent<AudioSource>().pitch = x, val1, 2);
+                    DOTween.To(() => Juke_Ref.GetComponent<AudioProcessor>().gThresh, x => Juke_Ref.GetComponent<AudioProcessor>().gThresh = x, val2, 2);
+
+                }
+                else
+                {
+                    float val1 = Juke_Ref.GetComponent<AudioSource>().pitch + Juke_Ref.pitch_modifier;
+                    float val2 = Juke_Ref.GetComponent<AudioProcessor>().gThresh - Juke_Ref.gThresh_modifier;
+                    DOTween.To(() => Juke_Ref.GetComponent<AudioSource>().pitch, x => Juke_Ref.GetComponent<AudioSource>().pitch = x, val1, 2);
+                    DOTween.To(() => Juke_Ref.GetComponent<AudioProcessor>().gThresh, x => Juke_Ref.GetComponent<AudioProcessor>().gThresh = x, val2, 2);
+                }
+
+
+                Juke_Ref.isMusicPower = true;
+                Juke_Ref.musicPower_time = Juke_Ref.musicPower_timer;
             }
             else
             {
-                DOTween.To(() => GetComponent<AudioSource>().pitch, x => GetComponent<AudioSource>().pitch = x, 1.3f, 2);
-                DOTween.To(() => GetComponent<AudioProcessor>().gThresh, x => GetComponent<AudioProcessor>().gThresh = x, 0.4f, 2);
-
+                musicPower = 2;
             }
-
-            Juke_Ref.isMusicPower = true;
-            Juke_Ref.musicPower_time = Juke_Ref.musicPower_timer;
         }
 
-        if (SlowPower >= 3)
+        if (SlowPower >= powerUpNeeded)
         {
             musicPower = 0;
             SlowPower = 0;
@@ -233,7 +249,7 @@ public class PlayerScript : MonoBehaviour
 
         }
 
-        if (SingleJumpPower >= 3)
+        if (SingleJumpPower >= powerUpNeeded)
         {
             musicPower = 0;
             SlowPower = 0;

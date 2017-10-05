@@ -42,7 +42,7 @@ public class GridMakerScript : MonoBehaviour
         // Color lastcolor = color;
         //color = Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
         //rend.material.color = color;
-        moveGridBlocks(4, true);
+        //moveGridBlocks(4, true);
         Debug.Log("Beat grid!!!");
 
     }
