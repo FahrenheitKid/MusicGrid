@@ -27,7 +27,7 @@ public class GridMakerScript : MonoBehaviour
     public int level_gap;
     public List<GameObject> grid_List;
 
-    List<GameObject> powerUps = new List<GameObject>();
+    public List<GameObject> powerUps = new List<GameObject>();
     float powerUpTimer = 0.0f;
 
     void Start()

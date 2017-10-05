@@ -45,12 +45,18 @@ public class PlayerScript : MonoBehaviour
 
     public GameObject otherPlayer;
     public JukeboxScript Juke_Ref;
-    BeatObserver beatObserver;
+
+    public GridMakerScript grid;
+
+    bool checkDeath = false;
+    float deathTimer = 0.0f;
+
+    public InterfaceManager interfaceManager;
+
     // Use this for initialization
     void Start()
     {
         controller = GetComponent<CharacterController>();
-        beatObserver = GetComponent<BeatObserver>();
         rend.material.color = color;
         //Select the instance of AudioProcessor and pass a reference
         //to this object
@@ -73,12 +79,21 @@ public class PlayerScript : MonoBehaviour
 
         handleTimers();
         handleMovement();
-        
 
-        if ((beatObserver.beatMask & BeatType.OnBeat) == BeatType.OnBeat)
+
+        if (checkDeath)
         {
-            onOnbeatDetected();
+            if (deathTimer > 5.0f)
+            {
+                if (isPlayer1)
+                    GameOver(0);
+                else
+                    GameOver(1);
+                //gameover routine;
+            }
         }
+
+        deathTimer += Time.deltaTime;
 
     }
 
@@ -204,6 +219,11 @@ public class PlayerScript : MonoBehaviour
                 SlowPower = 0;
                 SingleJumpPower = 0;
 
+                if (isPlayer1)
+                    interfaceManager.RemoveAll(0);
+                else
+                    interfaceManager.RemoveAll(1);
+
 
                 print("aplayou");
 
@@ -242,6 +262,11 @@ public class PlayerScript : MonoBehaviour
             SlowPower = 0;
             SingleJumpPower = 0;
 
+            if (isPlayer1)
+                interfaceManager.RemoveAll(0);
+            else
+                interfaceManager.RemoveAll(1);
+
             PlayerScript ps = otherPlayer.GetComponent<PlayerScript>();
             ps.slowed = true;
             ps.slowed_time = ps.slowed_timer;
@@ -255,6 +280,11 @@ public class PlayerScript : MonoBehaviour
             SlowPower = 0;
             SingleJumpPower = 0;
 
+            if (isPlayer1)
+                interfaceManager.RemoveAll(0);
+            else
+                interfaceManager.RemoveAll(1);
+
             PlayerScript ps = otherPlayer.GetComponent<PlayerScript>();
             ps.single_jumped = true;
             ps.singleJumped_time = ps.singleJumped_timer;
@@ -264,20 +294,40 @@ public class PlayerScript : MonoBehaviour
 
     }
 
+    void GameOver(int player)
+    {
+        //Time.timeScale = 0.0f;
+        interfaceManager.GameOver(player);
+    }
+
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
-        if (hit.transform.CompareTag("Wall"))
+        if (hit.transform.CompareTag("EndWorld"))
+        {
+            if (isPlayer1)
+                GameOver(0);
+            else
+                GameOver(1);
+        }
+
+        if (hit.transform.CompareTag("Block"))
         {
             Vector3 collisionPoint = hit.normal;
-            float dotRight = Vector3.Dot(-collisionPoint, Vector3.right);
+            float dotUp = Vector3.Dot(-collisionPoint, Vector3.down);
             float dotLeft = Vector3.Dot(-collisionPoint, Vector3.left);
-            if (dotRight > 0.99f)
+            if (dotUp > 0.99f)
             {
-                Debug.Log("Right");
-            }
-            if (dotLeft > 0.99f)
-            {
-                Debug.Log("Left");
+                if (hit.gameObject.GetComponent<GridBlockScript>().level < grid.highest_level)
+                {
+                    if (!checkDeath)
+                        deathTimer = 0.0f;
+                    checkDeath = true;
+                }
+                else
+                {
+                    checkDeath = false;
+                    deathTimer = 0.0f;
+                }
             }
         }
 
@@ -287,13 +337,32 @@ public class PlayerScript : MonoBehaviour
             PowerUpScript p = hit.transform.gameObject.GetComponent<PowerUpScript>();
 
             if (p.isMusicPower)
+            {
                 musicPower++;
+                if (isPlayer1)
+                    interfaceManager.addPower(2, 0, musicPower);
+                else
+                    interfaceManager.addPower(2, 1, musicPower);
+            }
             else if (p.isSlowPower)
+            {
                 SlowPower++;
+                if (isPlayer1)
+                    interfaceManager.addPower(0, 0, SlowPower);
+                else
+                    interfaceManager.addPower(0, 1, SlowPower);
+            }
             else if (p.isSingleJumpPower)
+            {
                 SingleJumpPower++;
+                if (isPlayer1)
+                    interfaceManager.addPower(1, 0, SingleJumpPower);
+                else
+                    interfaceManager.addPower(1, 1, SingleJumpPower);
+            }
 
             applyPower();
+            grid.powerUps.Remove(hit.gameObject);
             Destroy(hit.gameObject);
 
         }

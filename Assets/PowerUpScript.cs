@@ -4,31 +4,29 @@ using UnityEngine;
 
 public class PowerUpScript : MonoBehaviour {
 
-
     public bool isSlowPower = false;
     public bool isMusicPower = false;
     public bool isSingleJumpPower = false;
-	// Use this for initialization
+	
 	void Start () {
 
         int luck = Random.Range(0, 2);
         //luck = 1;
-        switch(luck)
+        switch (luck)
         {
-            case 0: isSlowPower = true;
+            case 0:
+                isSlowPower = true;
+                GetComponent<MeshRenderer>().material.color = Color.blue;
                 break;
-            case 1: isMusicPower = true;
-
+            case 1:
+                isMusicPower = true;
+                GetComponent<MeshRenderer>().material.color = Color.green;
                 break;
-            case 2: isSingleJumpPower = true;
-                break;
-            default:
+            case 2:
+                isSingleJumpPower = true;
+                GetComponent<MeshRenderer>().material.color = Color.yellow;
                 break;
         }
-	}
+    }
 	
-	// Update is called once per frame
-	void Update () {
-		
-	}
 }
