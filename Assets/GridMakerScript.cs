@@ -106,7 +106,7 @@ public class GridMakerScript : MonoBehaviour {
 
     // Update is called once per frame
     void Update () {
-        if ((beatObserver.beatMask & BeatType.OnBeat) == BeatType.OnBeat)
+        if ((beatObserver.beatMask & BeatType.UpBeat) == BeatType.UpBeat)
         {
             onOnbeatDetected();
         }

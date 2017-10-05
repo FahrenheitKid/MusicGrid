@@ -8,6 +8,7 @@ public class JukeboxScript : MonoBehaviour {
     public float offsetx;
     public float offsety;
     public float offsetz;
+    public GameObject grid;
     void Start()
     {
         //Select the instance of AudioProcessor and pass a reference
@@ -22,7 +23,9 @@ public class JukeboxScript : MonoBehaviour {
     //to adjust the sensitivity
     void onOnbeatDetected()
     {
-        //Debug.Log("Beat!!!");
+        GridMakerScript gm = grid.GetComponent<GridMakerScript>();
+        gm.moveGridBlocks(4, true);
+        Debug.Log("Beat!!!");
     }
 
     //This event will be called every frame while music is playing
