@@ -4,9 +4,11 @@ using UnityEngine;
 using SynchronizerData;
 using DG.Tweening;
 
-public class GridMakerScript : MonoBehaviour {
+public class GridMakerScript : MonoBehaviour
+{
 
     public GameObject block1;
+    public GameObject powerUpPrefab;
 
     public bool populate;
     public int worldWidth = 10;
@@ -18,22 +20,20 @@ public class GridMakerScript : MonoBehaviour {
     public float gapsize_z = 0;
 
     public float block_movement_duration;
-    BeatObserver beatObserver;
-
 
     public int lowest_level;
     public int highest_level;
     public int level_gap_limit;
     public int level_gap;
     public List<GameObject> grid_List;
+
+    List<GameObject> powerUps = new List<GameObject>();
+    float powerUpTimer = 0.0f;
+
     void Start()
     {
-
-       
         if (populate)
-        StartCoroutine(CreateWorld());
-
-        beatObserver = GetComponent<BeatObserver>();
+            StartCoroutine(CreateWorld());
     }
 
 
@@ -52,7 +52,7 @@ public class GridMakerScript : MonoBehaviour {
         int direction = 1;
 
         if (!up) direction = -1;
-        if(n_blocks > grid_List.Count)
+        if (n_blocks > grid_List.Count)
         {
             print("trying to move more blocks than exists!");
             return;
@@ -68,7 +68,7 @@ public class GridMakerScript : MonoBehaviour {
         if (level_gap >= level_gap_limit)
             needToSelect = true;
 
-        if(needToSelect)
+        if (needToSelect)
         {
             for (int i = 0; i < grid_List.Count; i++)
             {
@@ -77,11 +77,11 @@ public class GridMakerScript : MonoBehaviour {
                     selecteds.Add(i);
                     // checklist.Add(i);
                 }
-                    
+
             }
         }
-        
-        if(selecteds.Count < n_blocks)
+
+        if (selecteds.Count < n_blocks)
         {
             int difference = n_blocks - selecteds.Count;
             //escolhe cubos random para serem movidos
@@ -93,11 +93,11 @@ public class GridMakerScript : MonoBehaviour {
 
             }
         }
-        
-        
+
+
 
         //move os cubos selecteds
-        for(int i = 0; i < selecteds.Count; i++)
+        for (int i = 0; i < selecteds.Count; i++)
         {
 
             if (i > n_blocks) break;
@@ -126,11 +126,11 @@ public class GridMakerScript : MonoBehaviour {
     public void updateLevelGap()
     {
 
-        for(int i = 0; i < grid_List.Count;i++)
+        for (int i = 0; i < grid_List.Count; i++)
         {
             GridBlockScript g = grid_List[i].GetComponent<GridBlockScript>();
 
-            if(i == 0)
+            if (i == 0)
             {
                 lowest_level = g.level;
                 highest_level = g.level;
@@ -164,12 +164,17 @@ public class GridMakerScript : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update () {
-        if ((beatObserver.beatMask & BeatType.UpBeat) == BeatType.UpBeat)
+
+    private void Update()
+    {
+        if (powerUps.Count < 2 && powerUpTimer > 2f)
         {
-            onOnbeatDetected();
+            SpawnPowerUp();
+            powerUpTimer = 0.0f;
         }
+        powerUpTimer += Time.fixedDeltaTime;
     }
+
 
 
     public int repeatlessRand(int min, int max, List<int> checklist)
@@ -199,6 +204,17 @@ public class GridMakerScript : MonoBehaviour {
         }
 
         return rand;
+    }
+
+    void SpawnPowerUp()
+    {
+        int cubeToSpawnX = Random.Range(1, (int)Mathf.Sqrt(grid_List.Count));
+        int cubeToSpawnZ = Random.Range(1, (int)Mathf.Sqrt(grid_List.Count));
+        int index = cubeToSpawnX * cubeToSpawnZ - 1;
+
+        int cubeLvl = grid_List[index].GetComponent<GridBlockScript>().level;
+        Vector3 spawnPos = new Vector3(1.5f * (cubeToSpawnX - 1), 0.85f + cubeLvl * 1f, 1.5f * cubeToSpawnZ);
+        powerUps.Add(Instantiate(powerUpPrefab, spawnPos, Quaternion.identity));
     }
 
 }
