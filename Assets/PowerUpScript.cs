@@ -12,7 +12,7 @@ public class PowerUpScript : MonoBehaviour {
 	void Start () {
 
         int luck = Random.Range(0, 2);
-
+        luck = 0;
         switch(luck)
         {
             case 0: isSlowPower = true;

@@ -30,6 +30,17 @@ public class PlayerScript : MonoBehaviour
     public int SlowPower;
     public int SingleJumpPower;
     public int musicPower;
+
+    public bool slowed;
+    public float slowed_timer;
+    public float slowed_time;
+
+    public bool single_jumped;
+    public float singleJumped_timer;
+    public float singleJumped_time;
+
+
+    public GameObject otherPlayer;
     BeatObserver beatObserver;
     // Use this for initialization
     void Start()
@@ -55,7 +66,10 @@ public class PlayerScript : MonoBehaviour
 
     void Update()
     {
+
+        handleTimers();
         handleMovement();
+        
 
         if ((beatObserver.beatMask & BeatType.OnBeat) == BeatType.OnBeat)
         {
@@ -64,6 +78,32 @@ public class PlayerScript : MonoBehaviour
 
     }
 
+    public void handleTimers()
+    {
+        if(slowed)
+        {
+            //speed = (float)speed * 0.5f;
+
+            slowed_time -= Time.deltaTime;
+            if(slowed_time <= 0)
+            {
+                slowed = false;
+                speed *= 2;
+            }
+
+        }
+
+        if(single_jumped)
+        {
+
+            singleJumped_time -= Time.deltaTime;
+            if (singleJumped_time <= 0)
+            {
+                single_jumped = false;
+            }
+        }
+
+    }
     public void handleMovement()
     {
 
@@ -108,7 +148,7 @@ public class PlayerScript : MonoBehaviour
                     moveDirection.y = jumpSpeed;
                     dJumpCounter = 0;
                 }
-                if (!controller.isGrounded && dJumpCounter < nrOfAlowedDJumps)
+                if (!controller.isGrounded && dJumpCounter < nrOfAlowedDJumps && !single_jumped)
                 {
                     moveDirection.y = jumpSpeed;
                     dJumpCounter++;
@@ -129,7 +169,7 @@ public class PlayerScript : MonoBehaviour
                     moveDirection.y = jumpSpeed;
                     dJumpCounter = 0;
                 }
-                if (!controller.isGrounded && dJumpCounter < nrOfAlowedDJumps)
+                if (!controller.isGrounded && dJumpCounter < nrOfAlowedDJumps && !single_jumped)
                 {
                     moveDirection.y = jumpSpeed;
                     dJumpCounter++;
@@ -147,6 +187,41 @@ public class PlayerScript : MonoBehaviour
 
     public void applyPower()
     {
+
+        print("aplayou");
+        if (musicPower >= 3)
+        {
+            musicPower = 0;
+            SlowPower = 0;
+            SingleJumpPower = 0;
+
+        }
+
+        if (SlowPower >= 3)
+        {
+            musicPower = 0;
+            SlowPower = 0;
+            SingleJumpPower = 0;
+
+            PlayerScript ps = otherPlayer.GetComponent<PlayerScript>();
+            ps.slowed = true;
+            ps.slowed_time = ps.slowed_timer;
+            ps.speed /= 2;
+
+        }
+
+        if (SingleJumpPower >= 3)
+        {
+            musicPower = 0;
+            SlowPower = 0;
+            SingleJumpPower = 0;
+
+            PlayerScript ps = otherPlayer.GetComponent<PlayerScript>();
+            ps.single_jumped = true;
+            ps.singleJumped_time = ps.singleJumped_timer;
+
+
+        }
 
     }
 
@@ -176,8 +251,8 @@ public class PlayerScript : MonoBehaviour
                 musicPower++;
             else if (p.isSlowPower)
                 SlowPower++;
-            else if (p.isMusicPower)
-                musicPower++;
+            else if (p.isSingleJumpPower)
+                SingleJumpPower++;
 
             applyPower();
             Destroy(hit.gameObject);
