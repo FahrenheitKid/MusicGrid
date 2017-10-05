@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using SynchronizerData;
+using DG.Tweening;
 
 public class PlayerScript : MonoBehaviour
 {
@@ -41,6 +42,7 @@ public class PlayerScript : MonoBehaviour
 
 
     public GameObject otherPlayer;
+    public JukeboxScript Juke_Ref;
     BeatObserver beatObserver;
     // Use this for initialization
     void Start()
@@ -188,13 +190,34 @@ public class PlayerScript : MonoBehaviour
     public void applyPower()
     {
 
-        print("aplayou");
+       
         if (musicPower >= 3)
         {
             musicPower = 0;
             SlowPower = 0;
             SingleJumpPower = 0;
 
+
+            print("aplayou");
+
+            //DOTween.To(,0.7,)
+
+            int luck = Random.Range(0, 2);
+            if (luck % 2 == 0)
+            {
+                DOTween.To(() => GetComponent<AudioSource>().pitch, x => GetComponent<AudioSource>().pitch = x, 1.0f, 2);
+                DOTween.To(() => GetComponent<AudioProcessor>().gThresh, x => GetComponent<AudioProcessor>().gThresh = x, 2.0f, 2);
+
+            }
+            else
+            {
+                DOTween.To(() => GetComponent<AudioSource>().pitch, x => GetComponent<AudioSource>().pitch = x, 1.3f, 2);
+                DOTween.To(() => GetComponent<AudioProcessor>().gThresh, x => GetComponent<AudioProcessor>().gThresh = x, 0.4f, 2);
+
+            }
+
+            Juke_Ref.isMusicPower = true;
+            Juke_Ref.musicPower_time = Juke_Ref.musicPower_timer;
         }
 
         if (SlowPower >= 3)

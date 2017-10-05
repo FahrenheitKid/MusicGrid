@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using DG.Tweening;
 
 public class JukeboxScript : MonoBehaviour {
 
@@ -10,6 +11,11 @@ public class JukeboxScript : MonoBehaviour {
     public float offsetz;
     public GameObject grid;
     public int blocks_to_move;
+    public bool isMusicPower;
+
+    public float musicPower_time;
+    public float musicPower_timer;
+
     void Start()
     {
         //Select the instance of AudioProcessor and pass a reference
@@ -19,6 +25,24 @@ public class JukeboxScript : MonoBehaviour {
         processor.onSpectrum.AddListener(onSpectrum);
     }
 
+
+    private void Update()
+    {
+        if (isMusicPower)
+        {
+            //speed = (float)speed * 0.5f;
+
+            musicPower_time -= Time.deltaTime;
+            if (musicPower_time <= 0)
+            {
+                isMusicPower = false;
+                DOTween.To(() => GetComponent<AudioSource>().pitch, x => GetComponent<AudioSource>().pitch = x, 1.0f, 1);
+                DOTween.To(() => GetComponent<AudioProcessor>().gThresh, x => GetComponent<AudioProcessor>().gThresh = x, 1.2f, 2);
+
+            }
+
+        }
+    }
     //this event will be called every time a beat is detected.
     //Change the threshold parameter in the inspector
     //to adjust the sensitivity
