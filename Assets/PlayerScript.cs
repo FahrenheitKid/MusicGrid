@@ -22,6 +22,7 @@ public class PlayerScript : MonoBehaviour
     int nrOfAlowedDJumps = 1; // New vairable
     int dJumpCounter = 0;     // New variable
 
+    public bool isPlayer1;
 
     public Color color;
     public Renderer rend;
@@ -44,7 +45,7 @@ public class PlayerScript : MonoBehaviour
     {
         Color lastcolor = color;
         color = Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
-        rend.material.color = color;
+        //rend.material.color = color;
         Debug.Log("Beat!!!");
 
     }
@@ -62,22 +63,51 @@ public class PlayerScript : MonoBehaviour
 
     public void handleMovement()
     {
-        moveDirection.x = Input.GetAxis("Horizontal") * speed;
-        moveDirection.z = Input.GetAxis("Vertical") * speed;
-
-        if (Input.GetButtonDown("Jump"))
+        if(isPlayer1)
         {
-            if (controller.isGrounded)
+            moveDirection.x = Input.GetAxis("P1_Horizontal") * speed;
+            moveDirection.z = Input.GetAxis("P1_Vertical") * speed;
+
+            if (Input.GetButtonDown("P1_Jump"))
             {
-                moveDirection.y = jumpSpeed;
-                dJumpCounter = 0;
+                if (controller.isGrounded)
+                {
+                    moveDirection.y = jumpSpeed;
+                    dJumpCounter = 0;
+                }
+                if (!controller.isGrounded && dJumpCounter < nrOfAlowedDJumps)
+                {
+                    moveDirection.y = jumpSpeed;
+                    dJumpCounter++;
+                }
             }
-            if (!controller.isGrounded && dJumpCounter < nrOfAlowedDJumps)
+
+        }
+        
+        else
+        {
+            moveDirection.x = Input.GetAxis("P2_Horizontal") * speed;
+            moveDirection.z = Input.GetAxis("P2_Vertical") * speed;
+
+            if(Input.GetButtonDown("P2_Jump"))
             {
-                moveDirection.y = jumpSpeed;
-                dJumpCounter++;
+                if (controller.isGrounded)
+                {
+                    moveDirection.y = jumpSpeed;
+                    dJumpCounter = 0;
+                }
+                if (!controller.isGrounded && dJumpCounter < nrOfAlowedDJumps)
+                {
+                    moveDirection.y = jumpSpeed;
+                    dJumpCounter++;
+                }
             }
         }
+        
+
+       
+
+      
         moveDirection.y -= gravity * Time.deltaTime;
         controller.Move(moveDirection * Time.deltaTime);
     }

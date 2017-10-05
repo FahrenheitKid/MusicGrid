@@ -16,15 +16,29 @@ public class SmoothFollow : MonoBehaviour
     // How much we 
     public float heightDamping = 2.0f;
     public float rotationDamping = 3.0f;
+    public float offset;
 
+    public GameObject p1;
+    public GameObject p2;
+
+    public bool PlayerMediumPointAsTarget;
     // Place the script in the Camera-Control group in the component menu
     [AddComponentMenu("Camera-Control/Smooth Follow")]
 
     void LateUpdate()
     {
+
+        
+        GameObject g = new GameObject();
+        g.transform.position = GetPoint(offset);
+
+        if (PlayerMediumPointAsTarget)
+            target = g.transform;
         // Early out if we don't have a target
         if (!target) return;
 
+
+        
         // Calculate the current rotation angles
         float wantedRotationAngle = target.eulerAngles.y;
         float wantedHeight = target.position.y + height;
@@ -51,5 +65,30 @@ public class SmoothFollow : MonoBehaviour
 
         // Always look at the target
         transform.LookAt(target);
+    }
+
+
+    public Vector3 GetPoint(float offset)
+    {
+        //get the positions of our transforms
+        Vector3 pos1 = p1.transform.position;
+        Vector3 pos2 = p2.transform.position;
+
+        //get the direction between the two transforms -->
+        Vector3 dir = (pos2 - pos1).normalized;
+
+        //get a direction that crosses our [dir] direction
+        //NOTE! : this can be any of a buhgillion directions that cross our [dir] in 3D space
+        //To alter which direction we're crossing in, assign another directional value to the 2nd parameter
+        Vector3 perpDir = Vector3.Cross(dir, Vector3.right);
+
+        //get our midway point
+        Vector3 midPoint = (pos1 + pos2) / 2f;
+
+        //get the offset point
+        //This is the point you're looking for.
+        Vector3 offsetPoint = midPoint + (perpDir * offset);
+
+        return offsetPoint;
     }
 }

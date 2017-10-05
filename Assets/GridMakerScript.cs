@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using SynchronizerData;
+using DG.Tweening;
 
 public class GridMakerScript : MonoBehaviour {
 
@@ -16,12 +17,15 @@ public class GridMakerScript : MonoBehaviour {
     public float gapsize_x = 0;
     public float gapsize_z = 0;
 
+    public float block_movement_duration;
     BeatObserver beatObserver;
 
     public List<GameObject> grid_List;
     void Start()
     {
-        if(populate)
+
+       
+        if (populate)
         StartCoroutine(CreateWorld());
 
         beatObserver = GetComponent<BeatObserver>();
@@ -65,8 +69,9 @@ public class GridMakerScript : MonoBehaviour {
             //melhor fazer Tween ou lerp com isso
             Vector3 newpos = grid_List[selecteds[i]].transform.position;
             newpos.y += 1 * direction;
+            Transform trans = grid_List[selecteds[i]].transform;
 
-            grid_List[selecteds[i]].transform.position = newpos;
+            trans.DOMoveY(newpos.y, block_movement_duration).SetEase(Ease.InOutQuad);
 
             GridBlockScript blockscript = grid_List[selecteds[i]].GetComponent<GridBlockScript>();
             if (!up && blockscript.level == 0)
