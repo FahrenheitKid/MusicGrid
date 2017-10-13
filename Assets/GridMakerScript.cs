@@ -213,7 +213,8 @@ public class GridMakerScript : MonoBehaviour
         int index = cubeToSpawnX * cubeToSpawnZ - 1;
 
         int cubeLvl = grid_List[index].GetComponent<GridBlockScript>().level;
-        Vector3 spawnPos = new Vector3(1.5f * (cubeToSpawnX - 1), 0.85f + cubeLvl * 1f, 1.5f * cubeToSpawnZ);
+        Vector3 spawnPos = new Vector3(1.5f * (cubeToSpawnX - 1), 0.85f + (cubeLvl + 1) * 1f, 1.5f * cubeToSpawnZ);
+        Debug.Log(spawnPos);
         powerUps.Add(Instantiate(powerUpPrefab, spawnPos, Quaternion.identity));
     }
 

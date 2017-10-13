@@ -21,6 +21,11 @@ public class InterfaceManager : MonoBehaviour
 
     public string[] sceneNames = new string[5];
 
+    public void QuitGame()
+    {
+        Application.Quit();
+    }
+
     public void ChangeMusicFoward()
     {
         SceneCount = (SceneCount + 1) % 5;

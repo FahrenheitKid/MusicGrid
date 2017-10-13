@@ -20,11 +20,11 @@ public class PowerUpScript : MonoBehaviour {
                 break;
             case 1:
                 isMusicPower = true;
-                GetComponent<MeshRenderer>().material.color = Color.green;
+                GetComponent<MeshRenderer>().material.color = Color.yellow;
                 break;
             case 2:
                 isSingleJumpPower = true;
-                GetComponent<MeshRenderer>().material.color = Color.yellow;
+                GetComponent<MeshRenderer>().material.color = Color.green;
                 break;
         }
     }

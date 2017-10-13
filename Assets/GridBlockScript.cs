@@ -15,6 +15,7 @@ public class GridBlockScript : MonoBehaviour {
     public List<Color> colors;
 	// Use this for initialization
 	void Start () {
+        rend = GetComponent<MeshRenderer>();
         currentColor = colors[0];
         currentColor_index = 0;
         rend.material.color = currentColor;

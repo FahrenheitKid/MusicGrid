@@ -210,11 +210,9 @@ public class PlayerScript : MonoBehaviour
        
         if (musicPower >= powerUpNeeded)
         {
-
+            print("test " + musicPower + " - " + powerUpNeeded);
             if (!Juke_Ref.isMusicPower)
             {
-
-
                 musicPower = 0;
                 SlowPower = 0;
                 SingleJumpPower = 0;
@@ -317,14 +315,16 @@ public class PlayerScript : MonoBehaviour
             float dotLeft = Vector3.Dot(-collisionPoint, Vector3.left);
             if (dotUp > 0.99f)
             {
-                if (hit.gameObject.GetComponent<GridBlockScript>().level < grid.highest_level)
+                if (hit.gameObject.GetComponent<GridBlockScript>().level < grid.highest_level -1)
                 {
                     if (!checkDeath)
                         deathTimer = 0.0f;
                     checkDeath = true;
+                    rend.material.color = Color.red;
                 }
                 else
                 {
+                    rend.material.color = Color.white;
                     checkDeath = false;
                     deathTimer = 0.0f;
                 }
@@ -340,25 +340,25 @@ public class PlayerScript : MonoBehaviour
             {
                 musicPower++;
                 if (isPlayer1)
-                    interfaceManager.addPower(2, 0, musicPower);
+                    interfaceManager.addPower(2, 0, musicPower-1);
                 else
-                    interfaceManager.addPower(2, 1, musicPower);
+                    interfaceManager.addPower(2, 1, musicPower-1);
             }
             else if (p.isSlowPower)
             {
                 SlowPower++;
                 if (isPlayer1)
-                    interfaceManager.addPower(0, 0, SlowPower);
+                    interfaceManager.addPower(0, 0, SlowPower-1);
                 else
-                    interfaceManager.addPower(0, 1, SlowPower);
+                    interfaceManager.addPower(0, 1, SlowPower-1);
             }
             else if (p.isSingleJumpPower)
             {
                 SingleJumpPower++;
                 if (isPlayer1)
-                    interfaceManager.addPower(1, 0, SingleJumpPower);
+                    interfaceManager.addPower(1, 0, SingleJumpPower-1);
                 else
-                    interfaceManager.addPower(1, 1, SingleJumpPower);
+                    interfaceManager.addPower(1, 1, SingleJumpPower-1);
             }
 
             applyPower();
