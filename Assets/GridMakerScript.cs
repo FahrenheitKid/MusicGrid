@@ -26,6 +26,8 @@ public class GridMakerScript : MonoBehaviour
     public int level_gap_limit;
     public int level_gap;
     public List<GameObject> grid_List;
+    public int lastBlockHitP1;
+    public int lastBlockHitP2;
 
     public List<GameObject> powerUps = new List<GameObject>();
     float powerUpTimer = 0.0f;
@@ -34,6 +36,15 @@ public class GridMakerScript : MonoBehaviour
     {
         if (populate)
             StartCoroutine(CreateWorld());
+
+        // 1.5 distance to sides
+        // 2.12132 to diagonals
+
+        /*
+        float dist = Vector3.Distance(grid_List[0].transform.position, grid_List[6].transform.position);
+        print("Distance to other: " + dist)
+        */
+
     }
 
 
@@ -47,7 +58,7 @@ public class GridMakerScript : MonoBehaviour
 
     }
 
-    public void moveGridBlocks(int n_blocks, bool up) // função que move os cubos
+    public void moveRandomGridBlocks(int n_blocks, bool up) // função que move os cubos
     {
         int direction = 1;
 
@@ -58,6 +69,139 @@ public class GridMakerScript : MonoBehaviour
             return;
 
         }
+        updateLevelGap();
+
+        List<int> selecteds = new List<int>();
+
+        List<int> checklist = new List<int>();
+
+        if (selecteds.Count < n_blocks)
+        {
+            int difference = n_blocks - selecteds.Count;
+            //escolhe cubos random para serem movidos
+            for (int i = 0; i < difference; i++)
+            {
+
+                int sel = repeatlessRand(0, grid_List.Count - 1, checklist);
+                selecteds.Add(sel);
+                checklist.Add(sel);
+
+            }
+        }
+
+
+
+        //move os cubos selecteds
+        for (int i = 0; i < selecteds.Count; i++)
+        {
+
+            if (i > n_blocks) break;
+            //melhor fazer Tween ou lerp com isso
+            Vector3 newpos = grid_List[selecteds[i]].transform.position;
+            newpos.y += 1 * direction;
+            Transform trans = grid_List[selecteds[i]].transform;
+
+            trans.DOMoveY(newpos.y, block_movement_duration).SetEase(Ease.InOutQuad);
+
+            GridBlockScript blockscript = grid_List[selecteds[i]].GetComponent<GridBlockScript>();
+            if (!up && blockscript.level == 0)
+                blockscript.level = 0;
+            else
+                blockscript.level += direction;
+
+            blockscript.updateColor();
+
+        }
+
+        updateLevelGap();
+
+    }
+
+
+    public void moveRangedAreaFrom(int n_blocks, bool up, int centerBlockID, int distance, bool isFilledArea) // função que move os cubos
+    {
+        int direction = 1;
+
+        if (!up) direction = -1;
+        if (n_blocks > grid_List.Count)
+        {
+            print("trying to move more blocks than exists!");
+            return;
+
+        }
+        updateLevelGap();
+
+        List<int> selecteds = new List<int>();
+
+        List<int> checklist = new List<int>();
+
+        bool no_limits = false;
+
+        if (n_blocks == 0) no_limits = true;
+
+        if (no_limits)
+        {
+            //int difference = n_blocks - selecteds.Count;
+            //escolhe cubos random para serem movidos
+            for (int i = 0; i < grid_List.Count; i++)
+            {
+
+                if (i == centerBlockID) continue;
+
+                float dist = Vector3.Distance(grid_List[i].transform.position, grid_List[centerBlockID].transform.position);
+
+                if(isFilledArea)
+                {
+                    if (dist <=   distance * 2.15)
+                    {
+                        selecteds.Add(i);
+                       // checklist.Add(i);
+                    }
+                }
+                else
+                {
+
+                }
+                
+               
+
+            }
+        }
+
+
+
+        //move os cubos selecteds
+        for (int i = 0; i < selecteds.Count; i++)
+        {
+            
+            if (i > n_blocks  && n_blocks > 0) break;
+            //melhor fazer Tween ou lerp com isso
+            Vector3 newpos = grid_List[selecteds[i]].transform.position;
+            newpos.y += 1 * direction;
+            Transform trans = grid_List[selecteds[i]].transform;
+
+            trans.DOMoveY(newpos.y, block_movement_duration).SetEase(Ease.InOutQuad);
+
+            GridBlockScript blockscript = grid_List[selecteds[i]].GetComponent<GridBlockScript>();
+            if (!up && blockscript.level == 0)
+                blockscript.level = 0;
+            else
+                blockscript.level += direction;
+
+            blockscript.updateColor();
+
+        }
+
+        updateLevelGap();
+
+    }
+
+    public void moveLowestBlocks(bool up) // função que move os cubos
+    {
+        int direction = 1;
+
+        if (!up) direction = -1;
+       
         updateLevelGap();
 
         List<int> selecteds = new List<int>();
@@ -81,26 +225,10 @@ public class GridMakerScript : MonoBehaviour
             }
         }
 
-        if (selecteds.Count < n_blocks)
-        {
-            int difference = n_blocks - selecteds.Count;
-            //escolhe cubos random para serem movidos
-            for (int i = 0; i < difference; i++)
-            {
-
-                selecteds.Add(repeatlessRand(0, grid_List.Count - 1, checklist));
-                checklist.Add(selecteds[i]);
-
-            }
-        }
-
-
-
         //move os cubos selecteds
         for (int i = 0; i < selecteds.Count; i++)
         {
 
-            if (i > n_blocks) break;
             //melhor fazer Tween ou lerp com isso
             Vector3 newpos = grid_List[selecteds[i]].transform.position;
             newpos.y += 1 * direction;

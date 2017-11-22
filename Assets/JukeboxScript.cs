@@ -20,6 +20,7 @@ public class JukeboxScript : MonoBehaviour {
     public float pitch_modifier;
     public float gThresh_modifier;
 
+
     void Start()
     {
         //Select the instance of AudioProcessor and pass a reference
@@ -53,7 +54,9 @@ public class JukeboxScript : MonoBehaviour {
     void onOnbeatDetected()
     {
         GridMakerScript gm = grid.GetComponent<GridMakerScript>();
-        gm.moveGridBlocks(blocks_to_move, true);
+        gm.moveLowestBlocks(true);
+        //gm.moveRandomGridBlocks(blocks_to_move, true);
+        gm.moveRangedAreaFrom(0, true, gm.lastBlockHitP1, 1, true);
         Debug.Log("Beat!!!");
     }
 

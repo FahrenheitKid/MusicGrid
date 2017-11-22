@@ -50,6 +50,8 @@ public class PlayerScript : MonoBehaviour
 
     bool checkDeath = false;
     float deathTimer = 0.0f;
+    public float deathIsComingTime;
+    public int levelFromHighestToTriggerDeath;
 
     public InterfaceManager interfaceManager;
 
@@ -58,6 +60,9 @@ public class PlayerScript : MonoBehaviour
     {
         controller = GetComponent<CharacterController>();
         rend.material.color = color;
+        if (levelFromHighestToTriggerDeath > grid.level_gap_limit)
+            levelFromHighestToTriggerDeath = grid.level_gap_limit - 1;
+
         //Select the instance of AudioProcessor and pass a reference
         //to this object
         //AudioProcessor processor = FindObjectOfType<AudioProcessor>();
@@ -83,7 +88,7 @@ public class PlayerScript : MonoBehaviour
 
         if (checkDeath)
         {
-            if (deathTimer > 5.0f)
+            if (deathTimer > deathIsComingTime)
             {
                 if (isPlayer1)
                     GameOver(0);
@@ -315,7 +320,7 @@ public class PlayerScript : MonoBehaviour
             float dotLeft = Vector3.Dot(-collisionPoint, Vector3.left);
             if (dotUp > 0.99f)
             {
-                if (hit.gameObject.GetComponent<GridBlockScript>().level < grid.highest_level -1)
+                if (hit.gameObject.GetComponent<GridBlockScript>().level < grid.highest_level - levelFromHighestToTriggerDeath)
                 {
                     if (!checkDeath)
                         deathTimer = 0.0f;
@@ -328,6 +333,29 @@ public class PlayerScript : MonoBehaviour
                     checkDeath = false;
                     deathTimer = 0.0f;
                 }
+
+
+                int g = -1;
+                for (int i = 0; i < grid.grid_List.Count; i++)
+                {
+                    if (hit.gameObject == grid.grid_List[i]) g = i;
+
+                }
+
+                
+
+                if (isPlayer1)
+                {
+                    if (g >= 0)
+                        grid.lastBlockHitP1 = g;
+
+                }
+                else
+                {
+                    if (g >= 0)
+                        grid.lastBlockHitP2 = g;
+                }
+                
             }
         }
 
