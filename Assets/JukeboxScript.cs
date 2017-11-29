@@ -58,7 +58,7 @@ public class JukeboxScript : MonoBehaviour {
         //gm.moveRandomGridBlocks(blocks_to_move, true);
 
         //ESCOLHA DA IA AQUI
-        gm.moveRangedAreaFrom(0, true, gm.lastBlockHitP1, 2, false);
+        gm.moveRangedAreaFrom(5, true, gm.lastBlockHitP1, 2, true,true,2);
        // Debug.Log("Beat!!!");
     }
 

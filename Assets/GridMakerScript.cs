@@ -18,8 +18,8 @@ public class GridMakerScript : MonoBehaviour
 
     public float gapsize_x = 0;
     public float gapsize_z = 0;
-    public float blocks_range_z;
-    public float blocks_range_x;
+    public float blocks_range_z = 1.5f;
+    public float blocks_range_x = 1.5f;
 
     public float block_movement_duration;
 
@@ -36,6 +36,9 @@ public class GridMakerScript : MonoBehaviour
 
     void Start()
     {
+        blocks_range_z = 1.5f;
+        blocks_range_x = 1.5f;
+
         if (populate)
             StartCoroutine(CreateWorld());
 
@@ -50,17 +53,7 @@ public class GridMakerScript : MonoBehaviour
     }
 
 
-    void onOnbeatDetected()
-    {
-        // Color lastcolor = color;
-        //color = Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
-        //rend.material.color = color;
-        //moveGridBlocks(4, true);
-        Debug.Log("Beat grid!!!");
-
-    }
-
-    public void moveRandomGridBlocks(int n_blocks, bool up) // função que move os cubos
+    public void moveRandomGridBlocks(int n_blocks, bool up) // função que move os cubos random no grid
     {
         int direction = 1;
 
@@ -119,8 +112,16 @@ public class GridMakerScript : MonoBehaviour
 
     }
 
+    // função que move os cubos de acordo com varios parametros
+    // n_blocks = numero de blocos para mover (0 = sem limites)
+    // up = true para mover cubos para cima e false para baixo.
+    // centerBlockID = o ID do bloco central de onde iniciará o raio da area de efeito dessa função ("epicentro")
+    // distance = quantas vezes a distancia de um vizinho deve ser multiplicada. 1 significa os vizinhos imediatamente próximos, 2 a 2 de distancia, etc
+    // isFilledArea = true para atuar em toda a area e false para apenas as extremidades (ainda precisa de uns ajustes)
+    // neighborsHeightLimit = true se deseja limitar que os blocos imediatamente vizinhos tenham um limit de altura em relação ao bloco central
+    // heighLimit = limite da altura dos imediatamente vizinhos
 
-    public void moveRangedAreaFrom(int n_blocks, bool up, int centerBlockID, int distance, bool isFilledArea) // função que move os cubos
+    public void moveRangedAreaFrom(int n_blocks, bool up, int centerBlockID, int distance, bool isFilledArea, bool neighborsHeightLimit, int heightLimit) 
     {
         int direction = 1;
 
@@ -149,21 +150,42 @@ public class GridMakerScript : MonoBehaviour
             //escolhe cubos random para serem movidos
             for (int i = 0; i < grid_List.Count; i++)
             {
+               
 
                 if (i == centerBlockID) continue;
 
                 Vector3 difference = grid_List[i].transform.position - grid_List[centerBlockID].transform.position;
 
 
-                
+
                 float distanceInX = Mathf.Abs(difference.x);
                 float distanceInY = Mathf.Abs(difference.y);
                 float distanceInZ = Mathf.Abs(difference.z);
 
+                GridBlockScript blockscript = grid_List[i].GetComponent<GridBlockScript>();
+
+                //se tem limite
+                if (neighborsHeightLimit)
+                {
+
+                    print("entrou aqui antes");
+                    //se são imediatamente vizinhos
+                    if (distanceInX <= 1 * blocks_range_x && distanceInZ <= 1 * blocks_range_z)
+                    {
+                        print("entrou aqui");
+                        int dif = 0;
+                        dif = blockscript.level - grid_List[centerBlockID].GetComponent<GridBlockScript>().level;
+                        dif = Mathf.Abs(dif);
+                        //se vai passar do height limit, ignora esse step para nao selecionar esse bloco
+                        if (dif >= heightLimit) continue;
+                    }
+
+                }
+
                 if (isFilledArea)
                 {
                     //se dentro da distancia adiciona
-                    if (distanceInX <=   distance * 1.5f && distanceInZ <= distance * 1.5f)
+                    if (distanceInX <= distance * blocks_range_x && distanceInZ <= distance * blocks_range_z)
                     {
                         selecteds.Add(i);
                        // checklist.Add(i);
@@ -172,11 +194,12 @@ public class GridMakerScript : MonoBehaviour
                 else
                 {
                     //se só o "contorno" da distancia, mas está ignorando a linha e coluna do jogador por algum motivo
-                    if(distanceInX <= distance * 1.5f && distanceInZ <= distance * 1.5f)
+                    if (distanceInX <= distance * blocks_range_x && distanceInZ <= distance * blocks_range_z)
                     {
 
-                        float newdis = (distance - 1) * 1.5f;
-                        if (distanceInX >=  newdis && distanceInZ >= newdis)
+                        float newdisX = (distance - 1) * blocks_range_x;
+                        float newdisZ = (distance - 1) * blocks_range_z;
+                        if (distanceInX >= newdisX && distanceInZ >= newdisZ)
                         {
                             selecteds.Add(i);
                         }
@@ -203,11 +226,31 @@ public class GridMakerScript : MonoBehaviour
 
                 Vector3 difference = grid_List[i].transform.position - grid_List[centerBlockID].transform.position;
 
-
+                
 
                 float distanceInX = Mathf.Abs(difference.x);
                 float distanceInY = Mathf.Abs(difference.y);
                 float distanceInZ = Mathf.Abs(difference.z);
+
+
+                GridBlockScript blockscript = grid_List[i].GetComponent<GridBlockScript>();
+
+                //se tem limite
+                if (neighborsHeightLimit)
+                {
+                    //se são imediatamente vizinhos
+                    if (distanceInX <= 1 * blocks_range_x && distanceInZ <= 1 * blocks_range_z)
+                    {
+                        int dif = 0;
+                        dif = blockscript.level - grid_List[centerBlockID].GetComponent<GridBlockScript>().level;
+                        dif = Mathf.Abs(dif);
+
+                        //se vai passar do height limit, ignora esse step para nao selecionar esse bloco
+                        if (dif >= heightLimit) continue;
+                    }
+                        
+                }
+
 
                 if (isFilledArea)
                 {
@@ -277,6 +320,9 @@ public class GridMakerScript : MonoBehaviour
         //move os cubos selecteds
         for (int i = 0; i < selecteds.Count; i++)
         {
+
+            GridBlockScript blockscript = grid_List[selecteds[i]].GetComponent<GridBlockScript>();
+
             
             if (i > n_blocks  && n_blocks > 0) break;
             //melhor fazer Tween ou lerp com isso
@@ -286,7 +332,7 @@ public class GridMakerScript : MonoBehaviour
 
             trans.DOMoveY(newpos.y, block_movement_duration).SetEase(Ease.InOutQuad);
 
-            GridBlockScript blockscript = grid_List[selecteds[i]].GetComponent<GridBlockScript>();
+           
             if (!up && blockscript.level == 0)
                 blockscript.level = 0;
             else
@@ -300,7 +346,7 @@ public class GridMakerScript : MonoBehaviour
 
     }
 
-    public void moveLowestBlocks(bool up) // função que move os cubos
+    public void moveLowestBlocks(bool up) // função que move os cubos mais baixos de acordo com o gap_level_limit
     {
         int direction = 1;
 
@@ -355,7 +401,7 @@ public class GridMakerScript : MonoBehaviour
     }
 
 
-    public void updateLevelGap()
+    public void updateLevelGap() // função que atualiza o valor do gap entre bloco mais alto e bloco mais baixo
     {
 
         for (int i = 0; i < grid_List.Count; i++)
@@ -377,7 +423,9 @@ public class GridMakerScript : MonoBehaviour
 
         level_gap = highest_level - lowest_level;
     }
-    IEnumerator CreateWorld()
+
+
+    IEnumerator CreateWorld() // função de criação de grid
     {
         for (int x = 0; x < worldWidth; x++)
         {
@@ -401,7 +449,7 @@ public class GridMakerScript : MonoBehaviour
     {
         if (powerUps.Count < 2 && powerUpTimer > 2f)
         {
-            SpawnPowerUp();
+            SpawnPowerUp(); 
             powerUpTimer = 0.0f;
         }
         powerUpTimer += Time.fixedDeltaTime;
@@ -409,7 +457,7 @@ public class GridMakerScript : MonoBehaviour
 
 
 
-    public int repeatlessRand(int min, int max, List<int> checklist)
+    public int repeatlessRand(int min, int max, List<int> checklist) // função utility para gerar random ignorando valores de uma lista de exceções
     {
         int rand = Random.Range(min, max);
         bool safetest = false;
@@ -438,6 +486,8 @@ public class GridMakerScript : MonoBehaviour
         return rand;
     }
 
+
+    //spawna os power ups na fase
     void SpawnPowerUp()
     {
         int cubeToSpawnX = Random.Range(1, (int)Mathf.Sqrt(grid_List.Count));
@@ -445,8 +495,8 @@ public class GridMakerScript : MonoBehaviour
         int index = cubeToSpawnX * cubeToSpawnZ - 1;
 
         int cubeLvl = grid_List[index].GetComponent<GridBlockScript>().level;
-        Vector3 spawnPos = new Vector3(1.5f * (cubeToSpawnX - 1), 0.85f + (cubeLvl + 1) * 1f, 1.5f * cubeToSpawnZ);
-        Debug.Log(spawnPos);
+        Vector3 spawnPos = new Vector3(1.5f * (cubeToSpawnX - 1), 0.85f + (cubeLvl + 2) * 1f, 1.5f * cubeToSpawnZ);
+        //Debug.Log(spawnPos);
         powerUps.Add(Instantiate(powerUpPrefab, spawnPos, Quaternion.identity));
     }
 
