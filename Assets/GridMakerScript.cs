@@ -18,6 +18,8 @@ public class GridMakerScript : MonoBehaviour
 
     public float gapsize_x = 0;
     public float gapsize_z = 0;
+    public float blocks_range_z;
+    public float blocks_range_x;
 
     public float block_movement_duration;
 
@@ -66,7 +68,7 @@ public class GridMakerScript : MonoBehaviour
         if (n_blocks > grid_List.Count)
         {
             print("trying to move more blocks than exists!");
-            return;
+            n_blocks = grid_List.Count;
 
         }
         updateLevelGap();
@@ -133,13 +135,15 @@ public class GridMakerScript : MonoBehaviour
 
         List<int> selecteds = new List<int>();
 
+        List <int>semiSelecteds = new List<int>();
+
         List<int> checklist = new List<int>();
 
         bool no_limits = false;
 
         if (n_blocks == 0) no_limits = true;
 
-        if (no_limits)
+        if (no_limits) // caso sem limites de cubos para mover
         {
             //int difference = n_blocks - selecteds.Count;
             //escolhe cubos random para serem movidos
@@ -148,11 +152,18 @@ public class GridMakerScript : MonoBehaviour
 
                 if (i == centerBlockID) continue;
 
-                float dist = Vector3.Distance(grid_List[i].transform.position, grid_List[centerBlockID].transform.position);
+                Vector3 difference = grid_List[i].transform.position - grid_List[centerBlockID].transform.position;
 
-                if(isFilledArea)
+
+                
+                float distanceInX = Mathf.Abs(difference.x);
+                float distanceInY = Mathf.Abs(difference.y);
+                float distanceInZ = Mathf.Abs(difference.z);
+
+                if (isFilledArea)
                 {
-                    if (dist <=   distance * 2.15)
+                    //se dentro da distancia adiciona
+                    if (distanceInX <=   distance * 1.5f && distanceInZ <= distance * 1.5f)
                     {
                         selecteds.Add(i);
                        // checklist.Add(i);
@@ -160,6 +171,20 @@ public class GridMakerScript : MonoBehaviour
                 }
                 else
                 {
+                    //se só o "contorno" da distancia, mas está ignorando a linha e coluna do jogador por algum motivo
+                    if(distanceInX <= distance * 1.5f && distanceInZ <= distance * 1.5f)
+                    {
+
+                        float newdis = (distance - 1) * 1.5f;
+                        if (distanceInX >=  newdis && distanceInZ >= newdis)
+                        {
+                            selecteds.Add(i);
+                        }
+                        
+                        // checklist.Add(i);
+
+                    }
+
 
                 }
                 
@@ -167,9 +192,88 @@ public class GridMakerScript : MonoBehaviour
 
             }
         }
+        else
+        {
+            //int difference = n_blocks - selecteds.Count;
+            //escolhe cubos random para serem movidos
+            for (int i = 0; i < grid_List.Count; i++)
+            {
+
+                if (i == centerBlockID) continue;
+
+                Vector3 difference = grid_List[i].transform.position - grid_List[centerBlockID].transform.position;
 
 
 
+                float distanceInX = Mathf.Abs(difference.x);
+                float distanceInY = Mathf.Abs(difference.y);
+                float distanceInZ = Mathf.Abs(difference.z);
+
+                if (isFilledArea)
+                {
+                    //se dentro da distancia adiciona
+                    if (distanceInX <= distance * blocks_range_x && distanceInZ <= distance * blocks_range_z)
+                    {
+                        semiSelecteds.Add(i);
+                        //checklist.Add(i);
+                    }
+                }
+                else
+                {
+                    //se só o "contorno" da distancia, mas está ignorando a linha e coluna do jogador por algum motivo
+                    if (distanceInX <= distance * blocks_range_x && distanceInZ <= distance * blocks_range_z)
+                    {
+
+                        float newdisX = (distance - 1) * blocks_range_x;
+                        float newdisZ = (distance - 1) * blocks_range_z;
+                        if (distanceInX >= newdisX && distanceInZ >= newdisZ)
+                        {
+                            semiSelecteds.Add(i);
+                            //checklist.Add(i);
+                        }
+
+
+
+                    }
+
+
+                }
+
+
+
+            }
+
+
+
+            // escolhe uma quantidade random dos semiSelecteds
+
+            for(int i = 0; i < n_blocks; i++)
+            {
+
+                int index = 0;
+                if (semiSelecteds.Count < n_blocks)
+                {
+                    for (int j = 0; j < semiSelecteds.Count; j++)
+                    {
+                        selecteds.Add(semiSelecteds[j]);
+                    }
+                        break;
+                }
+                else
+                {
+                    index = repeatlessRand(0, semiSelecteds.Count, checklist);
+                    checklist.Add(index);
+                    selecteds.Add(semiSelecteds[index]);
+                }
+                 
+
+                
+
+            }
+        }
+
+
+        print("moveu tantos " + selecteds.Count);
         //move os cubos selecteds
         for (int i = 0; i < selecteds.Count; i++)
         {

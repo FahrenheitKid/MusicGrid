@@ -56,8 +56,10 @@ public class JukeboxScript : MonoBehaviour {
         GridMakerScript gm = grid.GetComponent<GridMakerScript>();
         gm.moveLowestBlocks(true);
         //gm.moveRandomGridBlocks(blocks_to_move, true);
-        gm.moveRangedAreaFrom(0, true, gm.lastBlockHitP1, 1, true);
-        Debug.Log("Beat!!!");
+
+        //ESCOLHA DA IA AQUI
+        gm.moveRangedAreaFrom(0, true, gm.lastBlockHitP1, 2, false);
+       // Debug.Log("Beat!!!");
     }
 
     //This event will be called every frame while music is playing
