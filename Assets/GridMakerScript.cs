@@ -447,7 +447,7 @@ public class GridMakerScript : MonoBehaviour
 
     private void Update()
     {
-        if (powerUps.Count < 2 && powerUpTimer > 2f)
+        if (powerUps.Count < 2 && powerUpTimer > 3f)
         {
             SpawnPowerUp(); 
             powerUpTimer = 0.0f;

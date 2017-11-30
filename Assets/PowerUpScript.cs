@@ -10,8 +10,8 @@ public class PowerUpScript : MonoBehaviour {
 	
 	void Start () {
 
-        int luck = Random.Range(0, 2);
-        //luck = 1;
+        int luck = Random.Range(0, 3);
+        
         switch (luck)
         {
             case 0:
@@ -28,5 +28,19 @@ public class PowerUpScript : MonoBehaviour {
                 break;
         }
     }
-	
+
+    private void OnCollisionEnter(Collision collision)
+    {
+
+
+        if (collision.transform.CompareTag("EndWorld"))
+        {
+
+            GridMakerScript gs = GameObject.FindGameObjectWithTag("Grid").GetComponent<GridMakerScript>();
+
+            gs.powerUps.Remove(gameObject);
+            Destroy(gameObject);
+        }
+    }
+
 }

@@ -7,6 +7,7 @@ public class InterfaceManager : MonoBehaviour
 {
 
     public GameObject inGameCanvas, GameOverCanvas;
+    public IAModule iaRef;
     public Text textWin;
     public Image[] slowPowersP1 = new Image[3];
     public Image[] jumpPowersP1 = new Image[3];
@@ -21,6 +22,11 @@ public class InterfaceManager : MonoBehaviour
 
     public string[] sceneNames = new string[5];
 
+
+    private void Start()
+    {
+       
+    }
     public void QuitGame()
     {
         Application.Quit();
@@ -60,6 +66,8 @@ public class InterfaceManager : MonoBehaviour
 
     public void RestartLevel()
     {
+
+        DontDestroyOnLoad(iaRef);
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
