@@ -3,22 +3,54 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEditor;
+using System;
 
 [System.Serializable]
-public class TileData
+public class IA_Action 
 {
-    [System.Serializable]
-    public struct rowData
+    int number_of_blocks; // 0 - 10
+    int distance; // 1 - 4
+    bool isFilled;
+
+    public static bool operator ==(IA_Action obj1, IA_Action obj2)
     {
-        public Vector2[] row;
+        if (ReferenceEquals(obj1, obj2))
+        {
+            return true;
+        }
+
+        if (ReferenceEquals(obj1, null))
+        {
+            return false;
+        }
+        if (ReferenceEquals(obj2, null))
+        {
+            return false;
+        }
+
+        return (obj1.number_of_blocks == obj2.number_of_blocks
+                && obj1.distance == obj2.distance
+                && obj1.isFilled == obj2.isFilled);
     }
 
-    public rowData[] rows = new rowData[10];
-}
-[System.Serializable]
-public class IA_Action
-{
-    int number_of_blocks; // 0 - 100
+    // this is second one '!='
+    public static bool operator !=(IA_Action obj1, IA_Action obj2)
+    {
+        return !(obj1 == obj2);
+    }
+
+    public IA_Action(int n_blocks, int dis, bool filled)
+    {
+        if (n_blocks < 0) n_blocks = 0;
+        if (n_blocks > 10) n_blocks = 10;
+
+        if (distance < 1) distance = 1;
+        if (distance > 4) distance = 4;
+
+        number_of_blocks = n_blocks; // 0 - 10
+        distance = dis; // 1 - 4
+         isFilled = filled;
+    }
 }
 
 public class IAModule : MonoBehaviour {
@@ -36,8 +68,8 @@ public class IAModule : MonoBehaviour {
     public int p1_blockID;
     public int p2_blockID;
 
+
     
-    public TileData.rowData[] r_Matrix;
 
     public float[][] qMatrix;
     public float[][] rMatrix;
@@ -50,6 +82,11 @@ public class IAModule : MonoBehaviour {
     public int lastState;
 
 
+    public utils.MatrixData r_Matrix = new utils.MatrixData(4, 80); // (colunas, linhas)
+    public utils.MatrixData q_Matrix = new utils.MatrixData(4, 80); // (colunas, linhas)
+
+    private IA_Action[,] actionTable = new IA_Action[4,80];
+
     // Use this for initialization
     void Start () {
 
@@ -60,8 +97,16 @@ public class IAModule : MonoBehaviour {
 
         p1_script = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerScript>();
         p2_script = GameObject.FindGameObjectWithTag("Player 2").GetComponent<PlayerScript>();
+
+        // linha 10 da coluna 1
+        r_Matrix.rows[10].row[1] = 20;
+
+        initializeZeroMatrix(true, true);
     }
 	
+
+
+
     public void loadMatrixFromFile(bool q, bool r)
     {
 
@@ -71,7 +116,23 @@ public class IAModule : MonoBehaviour {
 
     public void initializeZeroMatrix(bool q, bool r)
     {
+        for(int i = 0; i < 4; i++)
+        {
+            for(int j = 0; j < 80; j++)
+            {
 
+                if(q)
+                {
+                    q_Matrix.rows[j].row[i] = 0;
+                }
+
+                if(r)
+                {
+                    
+                    r_Matrix.rows[j].row[i] = 0;
+                }
+            }
+        }
     }
 
     public void initalizeZeroMaxiumSizeMatrix(bool q, bool r)

@@ -20,22 +20,27 @@ namespace utils
     {
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
+            GUIStyle style = new GUIStyle();
+
             EditorGUI.PrefixLabel(position, label);
+
             Rect newPosition = position;
             newPosition.y += 18f;
 
             SerializedProperty rows = property.FindPropertyRelative("rows");
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < rows.arraySize; i++)
             {
                 SerializedProperty row = rows.GetArrayElementAtIndex(i).FindPropertyRelative("row");
 
                 newPosition.height = 20;
                 newPosition.width = 20;
 
-                EditorGUI.PrefixLabel(newPosition, new GUIContent(i.ToString()));
+                //EditorGUI.PrefixLabel(newPosition, new GUIContent(i.ToString()));
+                EditorGUI.TextArea(newPosition, i.ToString(), new GUIStyle());
+
                 newPosition.x += 15;
-                for (int j = 0; j < 10; j++)
+                for (int j = 0; j < row.arraySize; j++)
                 {
                     EditorGUI.PropertyField(newPosition, row.GetArrayElementAtIndex(j), GUIContent.none);
                     newPosition.x += newPosition.width + 2.5f;
@@ -48,7 +53,7 @@ namespace utils
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            return 20 * 12;
+            return (property.FindPropertyRelative("rows").arraySize * 2) * 12;
         }
     }
 
@@ -61,6 +66,19 @@ namespace utils
             public int[] row;
         }
 
-        public rowData[] rows = new rowData[10];
+        public rowData[] rows;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="x">Columms</param>
+        /// <param name="y">Lines</param>
+        public MatrixData(int x, int y)
+        {
+            rows = new rowData[y];
+
+            for (int i = 0; i < y; i++)
+                rows[i].row = new int[x];
+        }
     }
 }

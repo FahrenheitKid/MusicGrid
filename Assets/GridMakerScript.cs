@@ -266,11 +266,11 @@ public class GridMakerScript : MonoBehaviour
                 if (neighborsHeightLimit)
                 {
 
-                    print("entrou aqui antes");
+                   
                     //se são imediatamente vizinhos
                     if (distanceInX <= 1 * blocks_range_x && distanceInZ <= 1 * blocks_range_z)
                     {
-                        print("entrou aqui");
+                      
                         int dif = 0;
                         dif = blockscript.level - grid_List[centerBlockID].GetComponent<GridBlockScript>().level;
                         dif = Mathf.Abs(dif);
@@ -459,16 +459,12 @@ public class GridMakerScript : MonoBehaviour
         int n_blocks = 0;
 
 
-        if (n_blocks_percent == 100)
-        {
-            n_blocks = -1;
-        }
-        else
+        //check the maximum blocks possible given the function parameters
         {
             int max_blocks = 0;
 
             int count = 0;
-            //check the maximum blocks possible given the function parameters
+            
             {
                 for (int i = 0; i < grid_List.Count; i++)
                 {
@@ -571,7 +567,7 @@ public class GridMakerScript : MonoBehaviour
 
         bool no_limits = false;
 
-        if (n_blocks == -1) no_limits = true;
+        if (n_blocks_percent == 100) no_limits = true;
 
         if (no_limits) // caso sem limites de cubos para mover
         {
@@ -597,11 +593,11 @@ public class GridMakerScript : MonoBehaviour
                 if (neighborsHeightLimit)
                 {
 
-                    print("entrou aqui antes");
+                   
                     //se são imediatamente vizinhos
                     if (distanceInX <= 1 * blocks_range_x && distanceInZ <= 1 * blocks_range_z)
                     {
-                        print("entrou aqui");
+                       
                         int dif = 0;
                         dif = blockscript.level - grid_List[centerBlockID].GetComponent<GridBlockScript>().level;
                         dif = Mathf.Abs(dif);
