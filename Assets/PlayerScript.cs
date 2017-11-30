@@ -48,8 +48,8 @@ public class PlayerScript : MonoBehaviour
 
     public GridMakerScript grid;
 
-    bool checkDeath = false;
-    float deathTimer = 0.0f;
+    public bool checkDeath = false;
+    public float deathTimer = 0.0f;
     public float deathIsComingTime;
     public int levelFromHighestToTriggerDeath;
 
@@ -88,7 +88,7 @@ public class PlayerScript : MonoBehaviour
 
         if (checkDeath)
         {
-            if (deathTimer > deathIsComingTime)
+            if (deathTimer <= 0)
             {
                 if (isPlayer1)
                     GameOver(0);
@@ -96,9 +96,11 @@ public class PlayerScript : MonoBehaviour
                     GameOver(1);
                 //gameover routine;
             }
+
+            deathTimer -= Time.deltaTime;
         }
 
-        deathTimer += Time.deltaTime;
+        
 
     }
 
@@ -323,7 +325,7 @@ public class PlayerScript : MonoBehaviour
                 if (hit.gameObject.GetComponent<GridBlockScript>().level < grid.highest_level - levelFromHighestToTriggerDeath)
                 {
                     if (!checkDeath)
-                        deathTimer = 0.0f;
+                        deathTimer = deathIsComingTime;
                     checkDeath = true;
                     rend.material.color = Color.red;
                 }
@@ -331,11 +333,11 @@ public class PlayerScript : MonoBehaviour
                 {
                     rend.material.color = Color.white;
                     checkDeath = false;
-                    deathTimer = 0.0f;
+                    deathTimer = deathIsComingTime;
                 }
 
 
-                int g = -1;
+                int g = -1; // index do bloco
                 for (int i = 0; i < grid.grid_List.Count; i++)
                 {
                     if (hit.gameObject == grid.grid_List[i]) g = i;

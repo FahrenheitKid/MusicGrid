@@ -2,11 +2,23 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEditor;
 
 [System.Serializable]
-public class ArrayClass
+public class TileData
 {
-    public int[] actionArray;
+    [System.Serializable]
+    public struct rowData
+    {
+        public Vector2[] row;
+    }
+
+    public rowData[] rows = new rowData[10];
+}
+[System.Serializable]
+public class IA_Action
+{
+    int number_of_blocks; // 0 - 100
 }
 
 public class IAModule : MonoBehaviour {
@@ -24,8 +36,8 @@ public class IAModule : MonoBehaviour {
     public int p1_blockID;
     public int p2_blockID;
 
-    public ArrayClass[] q_Matrix;
-    public ArrayClass[] r_Matrix;
+    
+    public TileData.rowData[] r_Matrix;
 
     public float[][] qMatrix;
     public float[][] rMatrix;
@@ -41,8 +53,7 @@ public class IAModule : MonoBehaviour {
     // Use this for initialization
     void Start () {
 
-        q_Matrix = new ArrayClass[3];
-        r_Matrix = new ArrayClass[3];
+      
 
 
         grid_ref = GameObject.FindGameObjectWithTag("Grid").GetComponent<GridMakerScript>();
@@ -55,6 +66,16 @@ public class IAModule : MonoBehaviour {
     {
 
 
+
+    }
+
+    public void initializeZeroMatrix(bool q, bool r)
+    {
+
+    }
+
+    public void initalizeZeroMaxiumSizeMatrix(bool q, bool r)
+    {
 
     }
 
