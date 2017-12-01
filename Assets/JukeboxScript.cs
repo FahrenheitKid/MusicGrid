@@ -53,11 +53,11 @@ public class JukeboxScript : MonoBehaviour
     {
         if (ia_ref.getGameOverStatus()) return;
         //caso não seja a primeira ação do jogo, atualiza os valures de R e Q
-        if (!isFirstMovement && ia_ref.learningModeOn)
+        if (!isFirstMovement && ia_ref.getLearningMode())
         {
             ia_ref.Rewardify();
             ia_ref.Qify();
-            
+            ia_ref.stepPlusPlus();
         }
 
         isFirstMovement = false;
@@ -71,7 +71,7 @@ public class JukeboxScript : MonoBehaviour
         // ecolhe a ação
         IA_Action action = ia_ref.pickAction(ia_ref.currentState);
         //faz a ação e atualiza os valores de last state, last action, etc.
-        ia_ref.printAction(action);
+        //ia_ref.printAction(action);
         ia_ref.doAction(action);
 
         //gm.moveRangedAreaFrom(100, 2, true);

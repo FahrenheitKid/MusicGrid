@@ -190,11 +190,16 @@ public class IAModule : MonoBehaviour
     {
         
         step_count++;
-        print("step++" + step_count);
+        //print("step++" + step_count);
     }
     public bool getGameOverStatus()
     {
         return isGameOver;
+    }
+
+    public bool getLearningMode()
+    {
+        return learningModeOn;
     }
     public void setGameOverStaus(bool s)
     {
@@ -404,14 +409,14 @@ public class IAModule : MonoBehaviour
     public int pickActionIndex(IAStates st)
     {
 
-        stepPlusPlus();
+        
 
         if (learningModeOn)
         {
-            if (getZeroPercentageInRMatrix() > 5)
+            if (getValuePercentageInRMatrix(1) > 15)
             {
                 //chance de pegar uma ação random
-                if (Random.Range(0, 100) <= getZeroPercentageInRMatrix())
+                if (Random.Range(0, 100) <= getValuePercentageInRMatrix(1))
                 {
                     return Random.Range(0, 80);
                 }
@@ -443,14 +448,14 @@ public class IAModule : MonoBehaviour
     //seleciona ação dado um estado
     public IA_Action pickAction(IAStates st)
     {
-        stepPlusPlus();
+       
 
         if (learningModeOn)
         {
-            if (getZeroPercentageInRMatrix() > 5)
+            if (getValuePercentageInRMatrix(1) > 15)
             {
                 //chance de pegar uma ação random
-                if (Random.Range(0, 100) <= getZeroPercentageInRMatrix())
+                if (Random.Range(0, 100) <= getValuePercentageInRMatrix(1))
                 {
                     return actionTable[Random.Range(0, 80)];
                 }
@@ -517,7 +522,7 @@ public class IAModule : MonoBehaviour
         {
             if (playerLastSafeBlockDistance <= currentPlayer.safeBlockDistance)
             {
-                addRValue(lastState, lastActionIndex, -5);
+                addRValue(lastState, lastActionIndex, -1);
             }
         }
 
@@ -590,7 +595,7 @@ A última ação realizada antes de um término de partida terá sua nota diminu
 
 
         setQValue(lastState, lastActionIndex, valor);
-        print("Q(" + (int)lastState + ", " + lastActionIndex + ") agora é = " + valor);
+        //print("Q(" + (int)lastState + ", " + lastActionIndex + ") agora é = " + valor);
         /*
          Q[último estado, última ação] ←
          (1 − α)Q[último estado, última ação] +
@@ -607,9 +612,16 @@ A última ação realizada antes de um término de partida terá sua nota diminu
 
     public void addRValue(IAStates st, int action_idx, int value)
     {
+        print("R(" + (int)st + ", " + action_idx + ") era " + r_Matrix.rows[action_idx].row[(int)st] + " agora é = " + (r_Matrix.rows[action_idx].row[(int)st] + value));
         // linha 10 da coluna 1
         r_Matrix.rows[action_idx].row[(int)st] += value;
-        if (r_Matrix.rows[action_idx].row[(int)st] < 1) r_Matrix.rows[action_idx].row[(int)st] = 1;
+        if (r_Matrix.rows[action_idx].row[(int)st] < 1)
+        {
+            print("Mentira não era nao");
+            r_Matrix.rows[action_idx].row[(int)st] = 1;
+        }
+        
+
     }
 
     public int getRValue(IAStates st, int action_idx)
@@ -866,6 +878,30 @@ A última ação realizada antes de um término de partida terá sua nota diminu
         // x total_count = 100 * zero count
 
         per = (int)((100 * zero_count) / total_count);
+        return per;
+    }
+
+    public int getValuePercentageInRMatrix(int value)
+    {
+        int per = 0;
+        int value_count = 0;
+        int total_count = 0;
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 80; j++)
+            {
+                if (r_Matrix.rows[j].row[i] == value)
+                    value_count++;
+
+                total_count++;
+            }
+        }
+
+        // total_count == 100%
+        // zero_count == x%
+        // x total_count = 100 * zero count
+
+        per = (int)((100 * value_count) / total_count);
         return per;
     }
 }
