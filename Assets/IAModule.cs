@@ -109,7 +109,7 @@ public class IAModule : MonoBehaviour
 
         initializeActions();
         printAction(37);
-        initializeZeroMatrix(true, true);
+        initializeMatrixWithValue(true, true,1);
 
         setCurrentPlayer();
         setCurrentState();
@@ -119,6 +119,9 @@ public class IAModule : MonoBehaviour
     private void Update()
     {
         setCurrentPlayer();
+        setCurrentState();
+
+        if (getLowestRValue() >= 1 && getMaxRValue() > 100) normalizeRMatrix();
 
     }
 
@@ -153,6 +156,7 @@ public class IAModule : MonoBehaviour
         }
 
         currentState = state;
+        playercurrentSafeBlockDistance = currentPlayer.safeBlockDistance;
     }
 
     //get the current player to focus aka dying player
@@ -312,6 +316,25 @@ public class IAModule : MonoBehaviour
         }
     }
 
+    public void initializeMatrixWithValue(bool q, bool r, int value)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 80; j++)
+            {
+                if (q)
+                {
+                    q_Matrix.rows[j].row[i] = value;
+                }
+
+                if (r)
+                {
+                    r_Matrix.rows[j].row[i] = value;
+                }
+            }
+        }
+    }
+
     public void initalizeZeroMaxiumSizeMatrix(bool q, bool r)
     {
     }
@@ -320,10 +343,13 @@ public class IAModule : MonoBehaviour
     {
         if (SceneManager.GetActiveScene().name == "Menu") return;
 
+
         grid_ref = GameObject.FindGameObjectWithTag("Grid").GetComponent<GridMakerScript>();
 
         p1_script = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerScript>();
         p2_script = GameObject.FindGameObjectWithTag("Player 2").GetComponent<PlayerScript>();
+
+        p1_script.Juke_Ref.isFirstMovement = true; // nova partida reseta essa variavel
     }
 
     //seleciona ação dado um estado
@@ -432,10 +458,168 @@ public class IAModule : MonoBehaviour
 
     public void Rewardify()
     {
+        // caso o estado do player diminuia um nivel
+        if ((lastState == IAStates.White && currentState == IAStates.Green) || (lastState == IAStates.Green && currentState == IAStates.Yellow))
+        {
+            addRValue(lastState, lastActionIndex, 50);
+        }//caso player desça um pouco
+        else if (playerLastSafeBlockDistance > currentPlayer.safeBlockDistance)
+        {
+            addRValue(lastState, lastActionIndex, 10);
+        }// caso não mude de estado
+        else if ((lastState == IAStates.White && currentState == IAStates.White) || (lastState == IAStates.Green && currentState == IAStates.Green))
+        {
+            if (playerLastSafeBlockDistance <= currentPlayer.safeBlockDistance)
+            {
+                addRValue(lastState, lastActionIndex, -5);
+            }
+        }
+
+        // second stage of rewardify
+        //caso continue no amarelo
+        else if (lastState == IAStates.Yellow && currentState == IAStates.Yellow)
+        {
+            //caso n mude distancia do jogador para o safe block
+            if(playerLastSafeBlockDistance == currentPlayer.safeBlockDistance)
+            {
+                addRValue(lastState, lastActionIndex, 30);
+            }
+            else
+            {//caso mude mas continue no mesmo estado
+                addRValue(lastState, lastActionIndex, 10);
+            }
+        }
+        
+        // third stage
+        //caso saida do estagio vermelho
+        else if (lastState == IAStates.Red && currentState == IAStates.White)
+        {
+            addRValue(lastState, lastActionIndex, 40);
+        }
+        else if(lastState == IAStates.Red && currentState == IAStates.Red)
+        {
+            if(playerLastSafeBlockDistance < currentPlayer.safeBlockDistance)
+            {
+                addRValue(lastState, lastActionIndex, 20);
+            }
+            else 
+            {
+                addRValue(lastState, lastActionIndex, -10);
+            }
+            
+        }
+
+
+        // fourth stage done outside here
+
+        /*
+            Rewardify:
+            Caso o estado anterior seja Branco ou Verde, o valor R(último estado, última ação)
+            ganha + 50 caso o estado atual seja agora um nível abaixo do anterior.Recebe - 5 caso a ação não cause mudança de estado. + 10 caso a distancia do safe block aumente
+
+Caso o estado anterior seja Amarelo, o valor R(último estado, última ação) ganha + 10 caso o estado atual continue sendo amarelo.
+
+Caso o estado anterior seja Vermelho, o valor R(último estado, última ação)
+ganha + 40 caso o estado atual seja agora Branco.Ganha + 20 caso a distância do jogador do Bloco Seguro tenha diminuído
+Recebe - 10 caso não cause nenhuma dessas mudanças.
+
+A última ação realizada antes de um término de partida terá sua nota diminuída em - 30.
+
+*/
 
     }
-    
 
+
+    public void setRValue(IAStates st, int action_idx, int value)
+    {
+        // linha 10 da coluna 1
+        r_Matrix.rows[action_idx].row[(int)st] = value;
+        normalizeRMatrix();
+    }
+
+    public void addRValue(IAStates st, int action_idx, int value)
+    {
+        // linha 10 da coluna 1
+        r_Matrix.rows[action_idx].row[(int)st] += value;
+        if (r_Matrix.rows[action_idx].row[(int)st] < 1) r_Matrix.rows[action_idx].row[(int)st] = 1;
+        //normalizeRMatrix();
+    }
+
+    public int getRValue(IAStates st, int action_idx)
+    {
+        // linha 10 da coluna 1
+        return r_Matrix.rows[action_idx].row[(int)st];
+        
+    }
+
+    public int getMaxRValue()
+    {
+        int highest_value = 0;
+        
+        for (int i = 0; i < 4; i++) // estados / columns
+        {
+            for (int j = 0; j < 80; j++) // ações / rows
+            {
+               
+                    //caso essa ação seja a maior, escolha ela
+                    if (r_Matrix.rows[j].row[i] > highest_value)
+                    {
+                        highest_value = r_Matrix.rows[j].row[i];
+                        
+                    }
+                
+
+
+            }
+        }
+        return highest_value;
+    }
+
+    public int getLowestRValue()
+    {
+        int lowest_value = 0;
+
+        for (int i = 0; i < 4; i++) // estados / columns
+        {
+            for (int j = 0; j < 80; j++) // ações / rows
+            {
+
+                //caso essa ação seja a maior, escolha ela
+                if (r_Matrix.rows[j].row[i] < lowest_value)
+                {
+                    lowest_value = r_Matrix.rows[j].row[i];
+
+                }
+
+
+
+            }
+        }
+        return lowest_value;
+    }
+
+
+
+    public void normalizeRMatrix()
+    {
+        for (int i = 0; i < 4; i++) // estados / columns
+        {
+            for (int j = 0; j < 80; j++) // ações / rows
+            {
+
+                //caso essa ação seja a maior, escolha ela
+
+                r_Matrix.rows[j].row[i] /= getMaxRValue();
+                
+
+
+
+            }
+        }
+    }
+
+
+    
     int getActionIndex(IA_Action ac)
     {
 

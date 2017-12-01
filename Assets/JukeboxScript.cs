@@ -18,9 +18,10 @@ public class JukeboxScript : MonoBehaviour
     public float gThresh_modifier;
 
     public IAModule ia_ref;
-
+    public bool isFirstMovement;
     private void Start()
     {
+        isFirstMovement = true;
         //Select the instance of AudioProcessor and pass a reference
         //to this object
         AudioProcessor processor = FindObjectOfType<AudioProcessor>();
@@ -49,6 +50,10 @@ public class JukeboxScript : MonoBehaviour
     //to adjust the sensitivity
     private void onOnbeatDetected()
     {
+        //caso não seja a primeira ação do jogo, atualiza os valures de R
+        if (!isFirstMovement) ia_ref.Rewardify();
+        isFirstMovement = false;
+
         GridMakerScript gm = grid.GetComponent<GridMakerScript>();
         gm.moveLowestBlocks(true);
         //gm.moveRandomGridBlocks(blocks_to_move, true);
