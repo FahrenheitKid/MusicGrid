@@ -17,6 +17,8 @@ public class JukeboxScript : MonoBehaviour
     public float pitch_modifier;
     public float gThresh_modifier;
 
+    public IAModule ia_ref;
+
     private void Start()
     {
         //Select the instance of AudioProcessor and pass a reference
@@ -52,7 +54,16 @@ public class JukeboxScript : MonoBehaviour
         //gm.moveRandomGridBlocks(blocks_to_move, true);
 
         //ESCOLHA DA IA AQUI
-        gm.moveRangedAreaFrom(100, 2, true);
+
+        // ecolhe a ação
+        IA_Action action = ia_ref.pickAction(ia_ref.currentState);
+        //faz a ação e atualiza os valores de last state, last action, etc.
+        ia_ref.printAction(action);
+        ia_ref.doAction(action);
+        
+
+
+        //gm.moveRangedAreaFrom(100, 2, true);
         // Debug.Log("Beat!!!");
     }
 

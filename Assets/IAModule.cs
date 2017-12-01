@@ -62,6 +62,7 @@ public class IAModule : MonoBehaviour
     public GridMakerScript grid_ref;
     public PlayerScript p1_script;
     public PlayerScript p2_script;
+    public PlayerScript currentPlayer;
 
     public float danger_trigger;
 
@@ -81,7 +82,8 @@ public class IAModule : MonoBehaviour
     public float e = 1; // Initial epsilon value for random action selection.
     public float eMin = 0.1f; // Lower bound of epsilon.
     public int annealingSteps = 2000; // Number of steps to lower e to eMin.
-    public int lastState;
+    public IAStates lastState;
+    public int lastActionIndex;
     public IAStates currentState;
     public bool isCurrentPlayer1;
     public int playerLastSafeBlockDistance;
@@ -108,6 +110,16 @@ public class IAModule : MonoBehaviour
         initializeActions();
         printAction(37);
         initializeZeroMatrix(true, true);
+
+        setCurrentPlayer();
+        setCurrentState();
+    }
+
+    // Update is called once per frame
+    private void Update()
+    {
+        setCurrentPlayer();
+
     }
 
     //get the state of the current player
@@ -150,16 +162,23 @@ public class IAModule : MonoBehaviour
         if (p1_script.deathTimer <= p2_script.deathTimer)
         {
             isCurrentPlayer1 = true;
+            currentPlayer = p1_script;
         }
         else
         {
             isCurrentPlayer1 = false;
+            currentPlayer = p2_script;
         }
     }
 
     public void printAction(int idx)
     {
         print("Action[" + idx + "] = (" + actionTable[idx].number_of_blocks + ", " + actionTable[idx].distance + ", " + actionTable[idx].isFilled + ")");
+    }
+
+    public void printAction(IA_Action ac)
+    {
+        print("Action[" + getActionIndex(ac) + "] = (" + ac.number_of_blocks + ", " + ac.distance + ", " + ac.isFilled + ")");
     }
 
     //At = [1-10,1-4, true-false]
@@ -307,10 +326,206 @@ public class IAModule : MonoBehaviour
         p2_script = GameObject.FindGameObjectWithTag("Player 2").GetComponent<PlayerScript>();
     }
 
-    // Update is called once per frame
-    private void Update()
+    //seleciona ação dado um estado
+    public int pickActionIndex(IAStates st)
     {
-        setCurrentPlayer();
-        setCurrentState();
+        if(learningModeOn)
+        {
+            if(getZeroPercentageInRMatrix() > 5)
+            {
+                //chance de pegar uma ação random
+                if(Random.Range(0,100) <= getZeroPercentageInRMatrix())
+                {
+                    return Random.Range(0, 80);
+                }
+                else // senão pega a melhor ação
+                {
+                    return getHighestRewardAction(st);
+                }
+            }
+            else
+            {
+                if (e > eMin) { e = e - ((1f - eMin) / (float)annealingSteps); }
+                if (Random.Range(0f, 1f) < e)
+                { 
+                
+                    return Random.Range(0, 80);
+                }
+                else // senão pega a melhor ação
+                {
+                    return getHighestRewardAction(st);
+                }
+            }
+        }
+        else
+        {
+            //seleciona a melhor ação na matriz Q
+            return 0;
+        }
+    }
+
+    //seleciona ação dado um estado
+    public IA_Action pickAction(IAStates st)
+    {
+        if (learningModeOn)
+        {
+            if (getZeroPercentageInRMatrix() > 5)
+            {
+                //chance de pegar uma ação random
+                if (Random.Range(0, 100) <= getZeroPercentageInRMatrix())
+                {
+                    return actionTable[Random.Range(0, 80)];
+                    
+                }
+                else // senão pega a melhor ação
+                {
+                    return actionTable[getHighestRewardAction(st)];
+                }
+            }
+            else
+            {
+                if (e > eMin) { e = e - ((1f - eMin) / (float)annealingSteps); }
+                if (Random.Range(0f, 1f) < e)
+                {
+
+                    return actionTable[Random.Range(0, 80)];
+                }
+                else // senão pega a melhor ação
+                {
+                    return actionTable[getHighestRewardAction(st)];
+                }
+            }
+        }
+        else
+        {
+            //seleciona a melhor ação na matriz Q
+            return actionTable[0];
+        }
+    }
+
+    // Realiza a ação selecionada.
+    //Guardando os valores de último estado, última ação e distância do jogador
+    //do Bloco Seguro.
+    public void doAction(int index)
+    {
+
+        lastState = currentState;
+        lastActionIndex = index;
+        playerLastSafeBlockDistance = currentPlayer.safeBlockDistance;
+        grid_ref.moveRangedAreaFrom(actionTable[index].number_of_blocks * 10, // de 10 em 10%
+            actionTable[index].distance,
+            actionTable[index].isFilled);
+
+        
+    }
+
+    public void doAction(IA_Action ac)
+    {
+        lastState = currentState;
+        lastActionIndex = getActionIndex(ac);
+        playerLastSafeBlockDistance = currentPlayer.safeBlockDistance;
+        grid_ref.moveRangedAreaFrom(ac.number_of_blocks * 10,
+            ac.distance,
+            ac.isFilled);
+    }
+
+
+    public void Rewardify()
+    {
+
+    }
+    
+
+    int getActionIndex(IA_Action ac)
+    {
+
+        for(int i = 0; i < 80; i++)
+        {
+            //caso essa ação seja a maior, escolha ela
+            if (actionTable[i] == ac)
+                return i;
+            
+        }
+            
+
+        
+         return 0;
+    }
+               
+                   
+
+
+            
+
+           
+        
+    
+    public int getHighestRewardAction(IAStates state)
+    {
+        int highest_value = 0;
+        int action_index = 0;
+        for (int i = 0; i < 4; i++) // estados / columns
+        {
+            for (int j = 0; j < 80; j++) // ações / rows
+            {
+                if(i == (int) state)
+                {
+                    //caso essa ação seja a maior, escolha ela
+                    if(r_Matrix.rows[j].row[i] > highest_value)
+                    {
+                        highest_value = r_Matrix.rows[j].row[i];
+                        action_index = j;
+                    }
+                }
+                    
+                
+            }
+        }
+        return action_index;
+    }
+
+    
+    public int getZerosInRMatrix()
+    {
+        int count = 0;
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 80; j++)
+            {
+                if (r_Matrix.rows[j].row[i] == 0)
+                    count++;
+                    
+                
+            }
+        }
+
+
+        //retorna a porcentagem de 0
+        return count;
+    }
+
+    public int getZeroPercentageInRMatrix()
+    {
+        int per = 0;
+        int zero_count = 0;
+        int total_count = 0;
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 80; j++)
+            {
+                if (r_Matrix.rows[j].row[i] == 0)
+                    zero_count++;
+
+                total_count++;
+
+            }
+        }
+
+        // total_count == 100%
+        // zero_count == x%
+        // x total_count = 100 * zero count
+
+        per = (int)((100 * zero_count) / total_count);
+        return per;
     }
 }

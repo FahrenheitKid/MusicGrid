@@ -113,6 +113,7 @@ public class GridMakerScript : MonoBehaviour
 
     public void moveRangedAreaFrom(int n_blocks_percent, bool up, int centerBlockID, int distance, bool isFilledArea, bool neighborsHeightLimit, int heightLimit)
     {
+
         int n_blocks = 0;
 
         if (n_blocks_percent == 100)
@@ -456,14 +457,14 @@ public class GridMakerScript : MonoBehaviour
             n_blocks = (max_blocks * n_blocks_percent) / 100;
         }
 
-        print(n_blocks_percent + "% = " + n_blocks + " blocos");
+      //  print(n_blocks_percent + "% = " + n_blocks + " blocos");
 
         int direction = 1;
 
         if (!up) direction = -1;
         if (n_blocks > grid_List.Count)
         {
-            print("trying to move more blocks than exists!");
+          //  print("trying to move more blocks than exists!");
             n_blocks = grid_List.Count;
         }
         updateLevelGap();
@@ -612,7 +613,7 @@ public class GridMakerScript : MonoBehaviour
             }
         }
 
-        print("moveu tantos " + selecteds.Count);
+        //print("moveu tantos " + selecteds.Count);
         //move os cubos selecteds
         for (int i = 0; i < selecteds.Count; i++)
         {
