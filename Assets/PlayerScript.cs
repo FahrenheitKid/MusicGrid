@@ -1,33 +1,35 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using DG.Tweening;
 using UnityEngine;
-using SynchronizerData;
-using DG.Tweening;
 
 public class PlayerScript : MonoBehaviour
 {
-
-
-
     // Moving fields
     [SerializeField] // This will make the variable below appear in the inspector
-    float speed = 6;
+    private float speed = 6;
+
     [SerializeField]
-    float jumpSpeed = 8;
+    private float jumpSpeed = 8;
+
     [SerializeField]
-    float gravity = 20;
-    Vector3 moveDirection = Vector3.zero;
-    CharacterController controller;
+    private float gravity = 20;
+
+    private Vector3 moveDirection = Vector3.zero;
+    private CharacterController controller;
+
     //bool isJumping; // "controller.isGrounded" can be used instead
     [SerializeField]
-    int nrOfAlowedDJumps = 1; // New vairable
-    int dJumpCounter = 0;     // New variable
+    private int nrOfAlowedDJumps = 1; // New vairable
+
+    private int dJumpCounter = 0;     // New variable
 
     public bool isPlayer1;
 
+    public IAStates currentState;
+    public int level;
+    public int safeBlockDistance;
+
     public Color color;
     public Renderer rend;
-
 
     public int powerUpNeeded;
     public int SlowPower;
@@ -42,7 +44,6 @@ public class PlayerScript : MonoBehaviour
     public float singleJumped_timer;
     public float singleJumped_time;
 
-
     public GameObject otherPlayer;
     public JukeboxScript Juke_Ref;
 
@@ -56,7 +57,7 @@ public class PlayerScript : MonoBehaviour
     public InterfaceManager interfaceManager;
 
     // Use this for initialization
-    void Start()
+    private void Start()
     {
         controller = GetComponent<CharacterController>();
         rend.material.color = color;
@@ -70,21 +71,22 @@ public class PlayerScript : MonoBehaviour
         //processor.onSpectrum.AddListener(onSpectrum);
     }
 
-    void onOnbeatDetected()
+    private void onOnbeatDetected()
     {
         Color lastcolor = color;
         color = Random.ColorHSV(0f, 1f, 1f, 1f, 0.5f, 1f);
         //rend.material.color = color;
         Debug.Log("Beat!!!");
-
     }
 
-    void Update()
+    private void Update()
     {
-
         handleTimers();
         handleMovement();
 
+        setCurrentLevel();
+        setCurrentState();
+        setCurrentSafeBlockDistance();
 
         if (checkDeath)
         {
@@ -99,40 +101,84 @@ public class PlayerScript : MonoBehaviour
 
             deathTimer -= Time.deltaTime;
         }
+    }
 
-        
+    public void setCurrentLevel()
+    {
+        int lvl = 0;
+        if (isPlayer1)
+        {
+            lvl = grid.grid_List[grid.lastBlockHitP1].GetComponent<GridBlockScript>().level;
+        }
+        else
+        {
+            lvl = grid.grid_List[grid.lastBlockHitP1].GetComponent<GridBlockScript>().level;
+        }
 
+        level = lvl;
+    }
+
+    public void setCurrentState()
+    {
+        // deathTimeIsComing == 100%
+        // deathTimer == x
+        // x deathTimeIsComing == 100 * deathTimer
+
+        int percentage = 100;
+
+        percentage = (int)((100 * deathTimer) / deathIsComingTime);
+
+        if (!checkDeath) currentState = IAStates.White;
+        else
+        {
+            if (percentage < 100 && percentage >= 66)
+                currentState = IAStates.Green;
+            else if (percentage < 66 && percentage >= 33)
+                currentState = IAStates.Yellow;
+            else if (percentage < 33 && percentage >= 0)
+                currentState = IAStates.Red;
+        }
+    }
+
+    public void setCurrentSafeBlockDistance()
+    {
+        int safeBlockLevel = Mathf.Abs(grid.highest_level - levelFromHighestToTriggerDeath);
+        int dis = 0;
+
+        dis = Mathf.Abs(safeBlockLevel - level);
+
+        if (level >= safeBlockLevel)
+            dis = 0;
+
+        safeBlockDistance = dis;
     }
 
     public void handleTimers()
     {
-        if(slowed)
+        if (slowed)
         {
             //speed = (float)speed * 0.5f;
 
             slowed_time -= Time.deltaTime;
-            if(slowed_time <= 0)
+            if (slowed_time <= 0)
             {
                 slowed = false;
                 speed *= 2;
             }
-
         }
 
-        if(single_jumped)
+        if (single_jumped)
         {
-
             singleJumped_time -= Time.deltaTime;
             if (singleJumped_time <= 0)
             {
                 single_jumped = false;
             }
         }
-
     }
+
     public void handleMovement()
     {
-
         if (transform.position.x <= -0.2)
         {
             Vector3 newpos = transform.position;
@@ -161,7 +207,6 @@ public class PlayerScript : MonoBehaviour
             transform.position = newpos;
         }
 
-
         if (isPlayer1)
         {
             moveDirection.x = Input.GetAxis("P1_Horizontal") * speed;
@@ -180,15 +225,13 @@ public class PlayerScript : MonoBehaviour
                     dJumpCounter++;
                 }
             }
-
         }
-        
         else
         {
             moveDirection.x = Input.GetAxis("P2_Horizontal") * speed;
             moveDirection.z = Input.GetAxis("P2_Vertical") * speed;
 
-            if(Input.GetButtonDown("P2_Jump"))
+            if (Input.GetButtonDown("P2_Jump"))
             {
                 if (controller.isGrounded)
                 {
@@ -202,19 +245,13 @@ public class PlayerScript : MonoBehaviour
                 }
             }
         }
-        
 
-       
-
-      
         moveDirection.y -= gravity * Time.deltaTime;
         controller.Move(moveDirection * Time.deltaTime);
     }
 
     public void applyPower()
     {
-
-       
         if (musicPower >= powerUpNeeded)
         {
             print("test " + musicPower + " - " + powerUpNeeded);
@@ -229,7 +266,6 @@ public class PlayerScript : MonoBehaviour
                 else
                     interfaceManager.RemoveAll(1);
 
-
                 print("aplayou");
 
                 //DOTween.To(,0.7,)
@@ -241,7 +277,6 @@ public class PlayerScript : MonoBehaviour
                     float val2 = Juke_Ref.GetComponent<AudioProcessor>().gThresh + Juke_Ref.gThresh_modifier;
                     DOTween.To(() => Juke_Ref.GetComponent<AudioSource>().pitch, x => Juke_Ref.GetComponent<AudioSource>().pitch = x, val1, 2);
                     DOTween.To(() => Juke_Ref.GetComponent<AudioProcessor>().gThresh, x => Juke_Ref.GetComponent<AudioProcessor>().gThresh = x, val2, 2);
-
                 }
                 else
                 {
@@ -250,7 +285,6 @@ public class PlayerScript : MonoBehaviour
                     DOTween.To(() => Juke_Ref.GetComponent<AudioSource>().pitch, x => Juke_Ref.GetComponent<AudioSource>().pitch = x, val1, 2);
                     DOTween.To(() => Juke_Ref.GetComponent<AudioProcessor>().gThresh, x => Juke_Ref.GetComponent<AudioProcessor>().gThresh = x, val2, 2);
                 }
-
 
                 Juke_Ref.isMusicPower = true;
                 Juke_Ref.musicPower_time = Juke_Ref.musicPower_timer;
@@ -276,7 +310,6 @@ public class PlayerScript : MonoBehaviour
             ps.slowed = true;
             ps.slowed_time = ps.slowed_timer;
             ps.speed /= 2;
-
         }
 
         if (SingleJumpPower >= powerUpNeeded)
@@ -293,13 +326,10 @@ public class PlayerScript : MonoBehaviour
             PlayerScript ps = otherPlayer.GetComponent<PlayerScript>();
             ps.single_jumped = true;
             ps.singleJumped_time = ps.singleJumped_timer;
-
-
         }
-
     }
 
-    void GameOver(int player)
+    private void GameOver(int player)
     {
         //Time.timeScale = 0.0f;
         interfaceManager.GameOver(player);
@@ -336,31 +366,24 @@ public class PlayerScript : MonoBehaviour
                     deathTimer = deathIsComingTime;
                 }
 
-
                 int g = -1; // index do bloco
                 for (int i = 0; i < grid.grid_List.Count; i++)
                 {
                     if (hit.gameObject == grid.grid_List[i]) g = i;
-
                 }
-
-                
 
                 if (isPlayer1)
                 {
                     if (g >= 0)
                         grid.lastBlockHitP1 = g;
-
                 }
                 else
                 {
                     if (g >= 0)
                         grid.lastBlockHitP2 = g;
                 }
-                
             }
         }
-
 
         if (hit.transform.CompareTag("PowerUp"))
         {
@@ -370,31 +393,30 @@ public class PlayerScript : MonoBehaviour
             {
                 musicPower++;
                 if (isPlayer1)
-                    interfaceManager.addPower(2, 0, musicPower-1);
+                    interfaceManager.addPower(2, 0, musicPower - 1);
                 else
-                    interfaceManager.addPower(2, 1, musicPower-1);
+                    interfaceManager.addPower(2, 1, musicPower - 1);
             }
             else if (p.isSlowPower)
             {
                 SlowPower++;
                 if (isPlayer1)
-                    interfaceManager.addPower(0, 0, SlowPower-1);
+                    interfaceManager.addPower(0, 0, SlowPower - 1);
                 else
-                    interfaceManager.addPower(0, 1, SlowPower-1);
+                    interfaceManager.addPower(0, 1, SlowPower - 1);
             }
             else if (p.isSingleJumpPower)
             {
                 SingleJumpPower++;
                 if (isPlayer1)
-                    interfaceManager.addPower(1, 0, SingleJumpPower-1);
+                    interfaceManager.addPower(1, 0, SingleJumpPower - 1);
                 else
-                    interfaceManager.addPower(1, 1, SingleJumpPower-1);
+                    interfaceManager.addPower(1, 1, SingleJumpPower - 1);
             }
 
             applyPower();
             grid.powerUps.Remove(hit.gameObject);
             Destroy(hit.gameObject);
-
         }
     }
 }
