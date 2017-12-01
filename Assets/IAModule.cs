@@ -617,7 +617,7 @@ A última ação realizada antes de um término de partida terá sua nota diminu
         r_Matrix.rows[action_idx].row[(int)st] += value;
         if (r_Matrix.rows[action_idx].row[(int)st] < 1)
         {
-            print("Mentira não era nao");
+          //  print("Mentira não era nao");
             r_Matrix.rows[action_idx].row[(int)st] = 1;
         }
         

@@ -1,9 +1,8 @@
-﻿using UnityEngine;
-
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 #if UNITY_EDITOR
-
 using UnityEditor;
-
 #endif
 
 namespace utils
@@ -15,7 +14,7 @@ namespace utils
         public AnimationCurve y;
         public AnimationCurve z;
     }
-
+#if UNITY_EDITOR
     [CustomPropertyDrawer(typeof(MatrixData))]
     public class CustomMatrixData : PropertyDrawer
     {
@@ -39,8 +38,8 @@ namespace utils
 
                 //EditorGUI.PrefixLabel(newPosition, new GUIContent(i.ToString()));
                 EditorGUI.TextArea(newPosition, i.ToString(), new GUIStyle());
-
                 newPosition.x += 15;
+
                 for (int j = 0; j < row.arraySize; j++)
                 {
                     EditorGUI.PropertyField(newPosition, row.GetArrayElementAtIndex(j), GUIContent.none);
@@ -54,10 +53,13 @@ namespace utils
 
         public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
         {
-            return (property.FindPropertyRelative("rows").arraySize * 2) * 12;
+            int i = property.FindPropertyRelative("rows").arraySize;
+            if (i > 0)
+                return (i * 20) + 40;
+            else return 12;
         }
     }
-
+#endif
     [System.Serializable]
     public class MatrixData
     {
@@ -70,16 +72,16 @@ namespace utils
         public rowData[] rows;
 
         /// <summary>
-        ///
+        /// 
         /// </summary>
-        /// <param name="x">Columms</param>
-        /// <param name="y">Lines</param>
+        /// <param name="x">Lines</param>
+        /// <param name="y">Columns</param>
         public MatrixData(int x, int y)
         {
-            rows = new rowData[y];
+            rows = new rowData[x];
 
-            for (int i = 0; i < y; i++)
-                rows[i].row = new int[x];
+            for (int i = 0; i < rows.Length; i++)
+                rows[i].row = new int[y];
         }
     }
 }
