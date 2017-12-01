@@ -2,28 +2,31 @@
 // Converted to C# because I fucking hate UnityScript and it's inexistant C# interoperability
 // If you have C# code and you want to edit SmoothFollow's vars ingame, use this instead.
 using UnityEngine;
-using System.Collections;
 
 public class SmoothFollow : MonoBehaviour
 {
-
     // The target we are following
     public Transform target;
+
     // The distance in the x-z plane to the target
     public float distance = 10.0f;
+
     // the height we want the camera to be above the target
     public float height = 5.0f;
-    // How much we 
+
+    // How much we
     public float heightDamping = 2.0f;
+
     public float rotationDamping = 3.0f;
     public float offset;
 
     public GameObject p1;
     public GameObject p2;
 
-    GameObject g;
+    private GameObject g;
 
     public bool PlayerMediumPointAsTarget;
+
     // Place the script in the Camera-Control group in the component menu
     [AddComponentMenu("Camera-Control/Smooth Follow")]
     // Place the script in the Camera-Control group in the component menu
@@ -32,7 +35,7 @@ public class SmoothFollow : MonoBehaviour
         g = new GameObject();
     }
 
-    void LateUpdate()
+    private void LateUpdate()
     {
         g.transform.position = GetPoint(offset);
 
@@ -41,8 +44,6 @@ public class SmoothFollow : MonoBehaviour
         // Early out if we don't have a target
         if (!target) return;
 
-
-        
         // Calculate the current rotation angles
         float wantedRotationAngle = target.eulerAngles.y;
         float wantedHeight = target.position.y + height;
@@ -70,7 +71,6 @@ public class SmoothFollow : MonoBehaviour
         // Always look at the target
         transform.LookAt(target);
     }
-
 
     public Vector3 GetPoint(float offset)
     {

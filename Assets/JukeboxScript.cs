@@ -19,6 +19,7 @@ public class JukeboxScript : MonoBehaviour
 
     public IAModule ia_ref;
     public bool isFirstMovement;
+
     private void Start()
     {
         isFirstMovement = true;
@@ -50,8 +51,15 @@ public class JukeboxScript : MonoBehaviour
     //to adjust the sensitivity
     private void onOnbeatDetected()
     {
-        //caso não seja a primeira ação do jogo, atualiza os valures de R
-        if (!isFirstMovement) ia_ref.Rewardify();
+        if (ia_ref.getGameOverStatus()) return;
+        //caso não seja a primeira ação do jogo, atualiza os valures de R e Q
+        if (!isFirstMovement && ia_ref.learningModeOn)
+        {
+            ia_ref.Rewardify();
+            ia_ref.Qify();
+            
+        }
+
         isFirstMovement = false;
 
         GridMakerScript gm = grid.GetComponent<GridMakerScript>();
@@ -65,8 +73,6 @@ public class JukeboxScript : MonoBehaviour
         //faz a ação e atualiza os valores de last state, last action, etc.
         ia_ref.printAction(action);
         ia_ref.doAction(action);
-        
-
 
         //gm.moveRangedAreaFrom(100, 2, true);
         // Debug.Log("Beat!!!");

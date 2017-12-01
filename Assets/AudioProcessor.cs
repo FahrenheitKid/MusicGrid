@@ -1,12 +1,12 @@
 ﻿/*
  * Copyright (c) 2015 Allan Pichardo
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *  http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,8 +15,6 @@
  */
 
 using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
 
 [RequireComponent(typeof(AudioSource))]
 public class AudioProcessor : MonoBehaviour
@@ -26,8 +24,10 @@ public class AudioProcessor : MonoBehaviour
     private long lastT, nowT, diff, entries, sum;
 
     public int bufferSize = 1024;
+
     // fft size
     private int samplingRate = 44100;
+
     // fft sampling frequency
 
     /* log-frequency averaging controls */
@@ -37,8 +37,8 @@ public class AudioProcessor : MonoBehaviour
     public float gThresh = 0.1f;
     // sensitivity
 
-    int blipDelayLen = 16;
-    int[] blipDelay;
+    private int blipDelayLen = 16;
+    private int[] blipDelay;
 
     private int sinceLast = 0;
     // counter to suppress double-beats
@@ -47,30 +47,33 @@ public class AudioProcessor : MonoBehaviour
 
     /* storage space */
     private int colmax = 120;
-    float[] spectrum;
-    float[] averages;
-    float[] acVals;
-    float[] onsets;
-    float[] scorefun;
-    float[] dobeat;
-    int now = 0;
+    private float[] spectrum;
+    private float[] averages;
+    private float[] acVals;
+    private float[] onsets;
+    private float[] scorefun;
+    private float[] dobeat;
+    private int now = 0;
     // time index for circular buffer within above
 
-    float[] spec;
+    private float[] spec;
     // the spectrum of the previous step
 
     /* Autocorrelation structure */
-    int maxlag = 100;
+    private int maxlag = 100;
+
     // (in frames) largest lag to track
-    float decay = 0.997f;
+    private float decay = 0.997f;
+
     // smoothing constant for running average
-    Autoco auco;
+    private Autoco auco;
 
     private float alph;
     // trade-off constant between tempo deviation penalty and onset strength
 
     [Header("Events")]
     public OnBeatEventHandler onBeat;
+
     public OnSpectrumEventHandler onSpectrum;
 
     //////////////////////////////////
@@ -93,7 +96,7 @@ public class AudioProcessor : MonoBehaviour
     }
 
     // Use this for initialization
-    void Start()
+    private void Start()
     {
         initArrays();
 
@@ -125,7 +128,7 @@ public class AudioProcessor : MonoBehaviour
         Debug.Log("average = " + average);
     }
 
-    double[] toDoubleArray(float[] arr)
+    private double[] toDoubleArray(float[] arr)
     {
         if (arr == null)
             return null;
@@ -139,7 +142,7 @@ public class AudioProcessor : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    private void Update()
     {
         if (audioSource.isPlaying)
         {
@@ -306,7 +309,7 @@ public class AudioProcessor : MonoBehaviour
         }
     }
 
-    float map(float s, float a1, float a2, float b1, float b2)
+    private float map(float s, float a1, float a2, float b1, float b2)
     {
         return b1 + (s - a1) * (b2 - b1) / (a2 - a1);
     }
@@ -329,13 +332,11 @@ public class AudioProcessor : MonoBehaviour
     [System.Serializable]
     public class OnBeatEventHandler : UnityEngine.Events.UnityEvent
     {
-
     }
 
     [System.Serializable]
     public class OnSpectrumEventHandler : UnityEngine.Events.UnityEvent<float[]>
     {
-
     }
 
     // class to compute an array of online autocorrelators
@@ -375,7 +376,6 @@ public class AudioProcessor : MonoBehaviour
 
         public void newVal(float val)
         {
-
             delays[indx] = val;
 
             // update running autocorrelator values

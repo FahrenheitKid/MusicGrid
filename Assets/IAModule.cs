@@ -76,9 +76,15 @@ public class IAModule : MonoBehaviour
     public float[][] qMatrix;
     public float[][] rMatrix;
 
+    public bool isGameOver;
     public bool learningModeOn;
-    public float learning_rate;
-    public float gamma;
+    public float learning_rate = 0.8f;
+    public int episodes_count = 0;
+    
+    public int steps_to_graduate;
+    public int step_count = 0;
+    public int episodes_to_graduate;
+    public float gamma = 0.4f;
     public float e = 1; // Initial epsilon value for random action selection.
     public float eMin = 0.1f; // Lower bound of epsilon.
     public int annealingSteps = 2000; // Number of steps to lower e to eMin.
@@ -98,6 +104,18 @@ public class IAModule : MonoBehaviour
     private void Start()
     {
         learningModeOn = true;
+        learning_rate = 0.8f;
+        gamma = 0.4f;
+        e = 1; // Initial epsilon value for random action selection.
+        eMin = 0.1f; // Lower bound of epsilon.
+     annealingSteps = 2000; // Number of steps to lower e to eMin.
+
+        isGameOver = false;
+        episodes_count = 1;
+        step_count = 1;
+
+        episodes_to_graduate = 20;
+        steps_to_graduate = 100;
 
         grid_ref = GameObject.FindGameObjectWithTag("Grid").GetComponent<GridMakerScript>();
 
@@ -109,7 +127,7 @@ public class IAModule : MonoBehaviour
 
         initializeActions();
         printAction(37);
-        initializeMatrixWithValue(true, true,1);
+        initializeMatrixWithValue(true, true, 1);
 
         setCurrentPlayer();
         setCurrentState();
@@ -121,8 +139,17 @@ public class IAModule : MonoBehaviour
         setCurrentPlayer();
         setCurrentState();
 
-        if (getLowestRValue() >= 1 && getMaxRValue() > 100) normalizeRMatrix();
-
+        //normalize Rmatrix periodically
+        if (getMinRValue() >= 1 && getMaxRValue() > 200)
+        {
+            print("R normalizado");
+            normalizeRMatrix();
+        }
+        if (getMinQValue() >= 1 && getMaxQValue() > 200)
+        {
+            print("Q normalizado");
+            normalizeQMatrix();
+        }
     }
 
     //get the state of the current player
@@ -159,6 +186,20 @@ public class IAModule : MonoBehaviour
         playercurrentSafeBlockDistance = currentPlayer.safeBlockDistance;
     }
 
+    public void stepPlusPlus()
+    {
+        
+        step_count++;
+        print("step++" + step_count);
+    }
+    public bool getGameOverStatus()
+    {
+        return isGameOver;
+    }
+    public void setGameOverStaus(bool s)
+    {
+        isGameOver = s;
+    }
     //get the current player to focus aka dying player
 
     public void setCurrentPlayer()
@@ -341,8 +382,15 @@ public class IAModule : MonoBehaviour
 
     private void OnLevelWasLoaded()
     {
-        if (SceneManager.GetActiveScene().name == "Menu") return;
+        setGameOverStaus(false);
 
+        episodes_count++;
+
+        //depois de x Episodios ou Y steps, para de aprender
+        if (episodes_count >= episodes_to_graduate || step_count >= steps_to_graduate)
+            learningModeOn = false;
+
+        if (SceneManager.GetActiveScene().name == "Menu") return;
 
         grid_ref = GameObject.FindGameObjectWithTag("Grid").GetComponent<GridMakerScript>();
 
@@ -355,12 +403,15 @@ public class IAModule : MonoBehaviour
     //seleciona ação dado um estado
     public int pickActionIndex(IAStates st)
     {
-        if(learningModeOn)
+
+        stepPlusPlus();
+
+        if (learningModeOn)
         {
-            if(getZeroPercentageInRMatrix() > 5)
+            if (getZeroPercentageInRMatrix() > 5)
             {
                 //chance de pegar uma ação random
-                if(Random.Range(0,100) <= getZeroPercentageInRMatrix())
+                if (Random.Range(0, 100) <= getZeroPercentageInRMatrix())
                 {
                     return Random.Range(0, 80);
                 }
@@ -373,8 +424,7 @@ public class IAModule : MonoBehaviour
             {
                 if (e > eMin) { e = e - ((1f - eMin) / (float)annealingSteps); }
                 if (Random.Range(0f, 1f) < e)
-                { 
-                
+                {
                     return Random.Range(0, 80);
                 }
                 else // senão pega a melhor ação
@@ -386,13 +436,15 @@ public class IAModule : MonoBehaviour
         else
         {
             //seleciona a melhor ação na matriz Q
-            return 0;
+            return getHighestRewardAction(st);
         }
     }
 
     //seleciona ação dado um estado
     public IA_Action pickAction(IAStates st)
     {
+        stepPlusPlus();
+
         if (learningModeOn)
         {
             if (getZeroPercentageInRMatrix() > 5)
@@ -401,7 +453,6 @@ public class IAModule : MonoBehaviour
                 if (Random.Range(0, 100) <= getZeroPercentageInRMatrix())
                 {
                     return actionTable[Random.Range(0, 80)];
-                    
                 }
                 else // senão pega a melhor ação
                 {
@@ -413,7 +464,6 @@ public class IAModule : MonoBehaviour
                 if (e > eMin) { e = e - ((1f - eMin) / (float)annealingSteps); }
                 if (Random.Range(0f, 1f) < e)
                 {
-
                     return actionTable[Random.Range(0, 80)];
                 }
                 else // senão pega a melhor ação
@@ -425,7 +475,7 @@ public class IAModule : MonoBehaviour
         else
         {
             //seleciona a melhor ação na matriz Q
-            return actionTable[0];
+            return actionTable[getHighestQAction(st)];
         }
     }
 
@@ -434,15 +484,12 @@ public class IAModule : MonoBehaviour
     //do Bloco Seguro.
     public void doAction(int index)
     {
-
         lastState = currentState;
         lastActionIndex = index;
         playerLastSafeBlockDistance = currentPlayer.safeBlockDistance;
         grid_ref.moveRangedAreaFrom(actionTable[index].number_of_blocks * 10, // de 10 em 10%
             actionTable[index].distance,
             actionTable[index].isFilled);
-
-        
     }
 
     public void doAction(IA_Action ac)
@@ -454,7 +501,6 @@ public class IAModule : MonoBehaviour
             ac.distance,
             ac.isFilled);
     }
-
 
     public void Rewardify()
     {
@@ -480,7 +526,7 @@ public class IAModule : MonoBehaviour
         else if (lastState == IAStates.Yellow && currentState == IAStates.Yellow)
         {
             //caso n mude distancia do jogador para o safe block
-            if(playerLastSafeBlockDistance == currentPlayer.safeBlockDistance)
+            if (playerLastSafeBlockDistance == currentPlayer.safeBlockDistance)
             {
                 addRValue(lastState, lastActionIndex, 30);
             }
@@ -489,26 +535,24 @@ public class IAModule : MonoBehaviour
                 addRValue(lastState, lastActionIndex, 10);
             }
         }
-        
+
         // third stage
         //caso saida do estagio vermelho
         else if (lastState == IAStates.Red && currentState == IAStates.White)
         {
             addRValue(lastState, lastActionIndex, 40);
         }
-        else if(lastState == IAStates.Red && currentState == IAStates.Red)
+        else if (lastState == IAStates.Red && currentState == IAStates.Red)
         {
-            if(playerLastSafeBlockDistance < currentPlayer.safeBlockDistance)
+            if (playerLastSafeBlockDistance < currentPlayer.safeBlockDistance)
             {
                 addRValue(lastState, lastActionIndex, 20);
             }
-            else 
+            else
             {
                 addRValue(lastState, lastActionIndex, -10);
             }
-            
         }
-
 
         // fourth stage done outside here
 
@@ -526,15 +570,39 @@ Recebe - 10 caso não cause nenhuma dessas mudanças.
 A última ação realizada antes de um término de partida terá sua nota diminuída em - 30.
 
 */
-
     }
 
+    public void Qify()
+    {
+        //aprendizado
+
+        int valor = (int)((1f - learning_rate) * getQValue(lastState, lastActionIndex) +
+            learning_rate * (getRValue(lastState, lastActionIndex) + gamma * getMaxQValueOfState(currentState)));
+
+        /*
+         float val = (float) ((1f - learning_rate) * (float) getQValue(lastState, lastActionIndex) +
+            learning_rate * ((float) getRValue(lastState, lastActionIndex) + gamma * (float) getMaxQValueOfState(currentState)));
+
+        float first_step = (1f - learning_rate) * (float) getQValue(lastState, lastActionIndex);
+            print("(1f - " + learning_rate + " ) * " + (float)getQValue(lastState, lastActionIndex) + " = " + val);
+
+         */
+
+
+        setQValue(lastState, lastActionIndex, valor);
+        print("Q(" + (int)lastState + ", " + lastActionIndex + ") agora é = " + valor);
+        /*
+         Q[último estado, última ação] ←
+         (1 − α)Q[último estado, última ação] +
+         α [R(último estado, última ação) +
+         Gamma * max  Q[estado atual , todas ações possíveis]]
+         */
+    }
 
     public void setRValue(IAStates st, int action_idx, int value)
     {
         // linha 10 da coluna 1
         r_Matrix.rows[action_idx].row[(int)st] = value;
-        normalizeRMatrix();
     }
 
     public void addRValue(IAStates st, int action_idx, int value)
@@ -542,63 +610,55 @@ A última ação realizada antes de um término de partida terá sua nota diminu
         // linha 10 da coluna 1
         r_Matrix.rows[action_idx].row[(int)st] += value;
         if (r_Matrix.rows[action_idx].row[(int)st] < 1) r_Matrix.rows[action_idx].row[(int)st] = 1;
-        //normalizeRMatrix();
     }
 
     public int getRValue(IAStates st, int action_idx)
     {
         // linha 10 da coluna 1
         return r_Matrix.rows[action_idx].row[(int)st];
-        
     }
 
     public int getMaxRValue()
     {
-        int highest_value = 0;
-        
+        int highest_value = 1;
+
         for (int i = 0; i < 4; i++) // estados / columns
         {
             for (int j = 0; j < 80; j++) // ações / rows
             {
-               
-                    //caso essa ação seja a maior, escolha ela
-                    if (r_Matrix.rows[j].row[i] > highest_value)
-                    {
-                        highest_value = r_Matrix.rows[j].row[i];
-                        
-                    }
-                
+                if (i == 0 && j == 0)
+                    highest_value = r_Matrix.rows[j].row[i];
 
-
+                //caso essa ação seja a maior, escolha ela
+                if (r_Matrix.rows[j].row[i] > highest_value)
+                {
+                    highest_value = r_Matrix.rows[j].row[i];
+                }
             }
         }
         return highest_value;
     }
 
-    public int getLowestRValue()
+    public int getMinRValue()
     {
-        int lowest_value = 0;
+        int lowest_value = 1;
 
         for (int i = 0; i < 4; i++) // estados / columns
         {
             for (int j = 0; j < 80; j++) // ações / rows
             {
+                if (i == 0 && j == 0)
+                    lowest_value = r_Matrix.rows[j].row[i];
 
                 //caso essa ação seja a maior, escolha ela
                 if (r_Matrix.rows[j].row[i] < lowest_value)
                 {
                     lowest_value = r_Matrix.rows[j].row[i];
-
                 }
-
-
-
             }
         }
         return lowest_value;
     }
-
-
 
     public void normalizeRMatrix()
     {
@@ -606,44 +666,120 @@ A última ação realizada antes de um término de partida terá sua nota diminu
         {
             for (int j = 0; j < 80; j++) // ações / rows
             {
-
                 //caso essa ação seja a maior, escolha ela
-
-                r_Matrix.rows[j].row[i] /= getMaxRValue();
-                
-
-
-
+                if (getMaxRValue() == 0 || r_Matrix.rows[j].row[i] == 0)
+                    r_Matrix.rows[j].row[i] = 1;
+                else
+                    r_Matrix.rows[j].row[i] /= getMaxRValue();
             }
         }
     }
 
-
-    
-    int getActionIndex(IA_Action ac)
+    public void setQValue(IAStates st, int action_idx, int value)
     {
+        // linha 10 da coluna 1
+        q_Matrix.rows[action_idx].row[(int)st] = value;
+    }
 
-        for(int i = 0; i < 80; i++)
+    public int getQValue(IAStates st, int action_idx)
+    {
+        // linha 10 da coluna 1
+        return q_Matrix.rows[action_idx].row[(int)st];
+    }
+
+    public int getMaxQValue()
+    {
+        int highest_value = 1;
+
+        for (int i = 0; i < 4; i++) // estados / columns
+        {
+            for (int j = 0; j < 80; j++) // ações / rows
+            {
+                if (i == 0 && j == 0)
+                    highest_value = q_Matrix.rows[j].row[i];
+
+                //caso essa ação seja a maior, escolha ela
+                if (q_Matrix.rows[j].row[i] > highest_value)
+                {
+                    highest_value = q_Matrix.rows[j].row[i];
+                }
+            }
+        }
+        return highest_value;
+    }
+
+    public int getMaxQValueOfState(IAStates st)
+    {
+        int highest_value = 1;
+
+        for (int i = 0; i < 4; i++) // estados / columns
+        {
+            for (int j = 0; j < 80; j++) // ações / rows
+            {
+                //caso n seja o estado que queremos, ignore
+                if (i != (int)st) continue;
+                //seta o primeiro valor como maximo
+                if (i == (int)st && j == 0) highest_value = q_Matrix.rows[j].row[i];
+
+                //caso essa ação seja a maior, escolha ela
+                if (q_Matrix.rows[j].row[i] > highest_value)
+                {
+                    highest_value = q_Matrix.rows[j].row[i];
+                }
+            }
+        }
+        return highest_value;
+    }
+
+    public int getMinQValue()
+    {
+        int lowest_value = 1;
+
+        for (int i = 0; i < 4; i++) // estados / columns
+        {
+            for (int j = 0; j < 80; j++) // ações / rows
+            {
+                if (i == 0 && j == 0)
+                    lowest_value = q_Matrix.rows[j].row[i];
+
+                //caso essa ação seja a maior, escolha ela
+                if (q_Matrix.rows[j].row[i] < lowest_value)
+                {
+                    lowest_value = q_Matrix.rows[j].row[i];
+                }
+            }
+        }
+        return lowest_value;
+    }
+
+    public void normalizeQMatrix()
+    {
+        for (int i = 0; i < 4; i++) // estados / columns
+        {
+            for (int j = 0; j < 80; j++) // ações / rows
+            {
+                //caso essa ação seja a maior, escolha ela
+
+                if (getMaxQValue() == 0 || q_Matrix.rows[j].row[i] == 0)
+                    q_Matrix.rows[j].row[i] = 1;
+                else
+                    q_Matrix.rows[j].row[i] /= getMaxQValue();
+            }
+        }
+    }
+
+    private int getActionIndex(IA_Action ac)
+    {
+        for (int i = 0; i < 80; i++)
         {
             //caso essa ação seja a maior, escolha ela
             if (actionTable[i] == ac)
                 return i;
-            
         }
-            
 
-        
-         return 0;
+        return 0;
     }
-               
-                   
 
-
-            
-
-           
-        
-    
     public int getHighestRewardAction(IAStates state)
     {
         int highest_value = 0;
@@ -652,23 +788,47 @@ A última ação realizada antes de um término de partida terá sua nota diminu
         {
             for (int j = 0; j < 80; j++) // ações / rows
             {
-                if(i == (int) state)
+                if (i == (int)state)
                 {
                     //caso essa ação seja a maior, escolha ela
-                    if(r_Matrix.rows[j].row[i] > highest_value)
+                    if (r_Matrix.rows[j].row[i] > highest_value)
                     {
                         highest_value = r_Matrix.rows[j].row[i];
                         action_index = j;
                     }
                 }
-                    
-                
             }
         }
         return action_index;
     }
 
-    
+    public int getHighestQAction(IAStates state)
+    {
+        int highest_value = 0;
+        int action_index = 0;
+        for (int i = 0; i < 4; i++) // estados / columns
+        {
+            for (int j = 0; j < 80; j++) // ações / rows
+            {
+                if (i == (int)state)
+                {
+                    if (j == 0)
+                    {
+                        highest_value = q_Matrix.rows[j].row[i];
+                        action_index = j;
+                    }
+                    //caso essa ação seja a maior, escolha ela
+                    if (q_Matrix.rows[j].row[i] > highest_value)
+                    {
+                        highest_value = q_Matrix.rows[j].row[i];
+                        action_index = j;
+                    }
+                }
+            }
+        }
+        return action_index;
+    }
+
     public int getZerosInRMatrix()
     {
         int count = 0;
@@ -678,11 +838,8 @@ A última ação realizada antes de um término de partida terá sua nota diminu
             {
                 if (r_Matrix.rows[j].row[i] == 0)
                     count++;
-                    
-                
             }
         }
-
 
         //retorna a porcentagem de 0
         return count;
@@ -701,7 +858,6 @@ A última ação realizada antes de um término de partida terá sua nota diminu
                     zero_count++;
 
                 total_count++;
-
             }
         }
 

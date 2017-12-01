@@ -2,10 +2,8 @@
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-
 public class InterfaceManager : MonoBehaviour
 {
-
     public GameObject inGameCanvas, GameOverCanvas;
     public IAModule iaRef;
     public Text textWin;
@@ -18,15 +16,14 @@ public class InterfaceManager : MonoBehaviour
 
     public Text sceneText;
 
-    int SceneCount = 0;
+    private int SceneCount = 0;
 
     public string[] sceneNames = new string[5];
 
-
     private void Start()
     {
-       
     }
+
     public void QuitGame()
     {
         Application.Quit();
@@ -37,6 +34,7 @@ public class InterfaceManager : MonoBehaviour
         SceneCount = (SceneCount + 1) % 5;
         sceneText.text = sceneNames[SceneCount];
     }
+
     public void ChangeMusicBackwards()
     {
         SceneCount = ((SceneCount - 1) + 5) % 5;
@@ -50,6 +48,8 @@ public class InterfaceManager : MonoBehaviour
 
     public void GameOver(int player)
     {
+        iaRef.setGameOverStaus(true);
+
         if (player == 0)
             textWin.text = "Player 2 Win!!";
         else
@@ -66,7 +66,6 @@ public class InterfaceManager : MonoBehaviour
 
     public void RestartLevel()
     {
-
         DontDestroyOnLoad(iaRef);
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
@@ -76,17 +75,19 @@ public class InterfaceManager : MonoBehaviour
         switch (power)
         {
             case 0:
-                if(player == 0)
+                if (player == 0)
                     slowPowersP1[amount].enabled = true;
                 else
                     slowPowersP2[amount].enabled = true;
                 break;
+
             case 1:
                 if (player == 0)
                     jumpPowersP1[amount].enabled = true;
                 else
                     jumpPowersP2[amount].enabled = true;
                 break;
+
             case 2:
                 if (player == 0)
                     musicPowersP1[amount].enabled = true;
@@ -114,5 +115,4 @@ public class InterfaceManager : MonoBehaviour
             }
         }
     }
-
 }
